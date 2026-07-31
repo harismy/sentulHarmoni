@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Detail paket trekking Sentul bersama Harmoni Trekking.">
+    <meta name="theme-color" content="#173d2b">
+    <title>Detail Destinasi | Harmoni Trekking Sentul</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/destination.css">
+</head>
+<body class="detail-page">
+    <header class="navbar is-solid" id="navbar">
+        <div class="container navbar-inner">
+            <a href="/#home" class="logo logo-art-link" aria-label="Harmoni Trekking Sentul">
+                <span class="brand-logo-art" aria-hidden="true"></span>
+            </a>
+            <nav class="nav-menu" id="navMenu" aria-label="Navigasi utama">
+                <a href="/#home" class="nav-link">Beranda</a>
+                <a href="/#about" class="nav-link">Tentang</a>
+                <a href="/#destinasi" class="nav-link active">Destinasi</a>
+                <a href="/#gallery" class="nav-link">Galeri</a>
+                <a href="/#contact" class="nav-link">Kontak</a>
+            </nav>
+            <a href="#bookingPanel" class="nav-cta"><i class="ri-calendar-check-line"></i><span>Pesan Trip</span></a>
+            <button class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-expanded="false"><i class="ri-menu-3-line"></i></button>
+        </div>
+    </header>
+
+    <main>
+        <div class="detail-loading" id="detailLoading">
+            <span></span><strong>Menyiapkan perjalanan...</strong>
+        </div>
+
+        <section class="detail-error" id="detailError" hidden>
+            <i class="ri-map-2-line"></i>
+            <h1>Destinasi tidak ditemukan</h1>
+            <p>Rute mungkin sudah diperbarui atau tidak lagi tersedia.</p>
+            <a href="/#destinasi" class="btn btn-primary"><i class="ri-arrow-left-line"></i> Kembali ke Destinasi</a>
+        </section>
+
+        <div id="detailContent" hidden>
+            <section class="detail-top">
+                <div class="container">
+                    <nav class="breadcrumb" aria-label="Breadcrumb">
+                        <a href="/">Beranda</a><i class="ri-arrow-right-s-line"></i><a href="/#destinasi">Destinasi</a><i class="ri-arrow-right-s-line"></i><span id="breadcrumbName">Detail</span>
+                    </nav>
+
+                    <div class="detail-gallery-stage" id="detailGalleryStage"></div>
+
+                    <div class="detail-heading">
+                        <div>
+                            <span class="detail-category" id="detailCategory">Wisata</span>
+                            <h1 id="detailName">Nama Destinasi</h1>
+                            <p><i class="ri-map-pin-2-line"></i> <span id="detailLocation">Sentul, Bogor</span></p>
+                        </div>
+                        <button class="share-button" id="shareButton"><i class="ri-share-line"></i><span>Bagikan</span></button>
+                    </div>
+
+                    <div class="trip-facts" data-detail-reveal>
+                        <div><i class="ri-time-line"></i><span><small>Durasi</small><strong id="detailDuration">-</strong></span></div>
+                        <div><i class="ri-road-map-line"></i><span><small>Jarak</small><strong id="detailDistance">-</strong></span></div>
+                        <div><i class="ri-bar-chart-line"></i><span><small>Kesulitan</small><strong id="detailDifficulty">-</strong></span></div>
+                        <div><i class="ri-map-pin-range-line"></i><span><small>Titik temu</small><strong id="detailMeetingPoint">-</strong></span></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="detail-body-section">
+                <div class="container detail-body-grid">
+                    <div class="detail-main">
+                        <section class="detail-block" data-detail-reveal>
+                            <span class="detail-section-label">Tentang Perjalanan</span>
+                            <h2>Gambaran rute</h2>
+                            <p class="lead-copy" id="detailDescription"></p>
+                            <div class="route-audience" id="routeAudience"></div>
+                        </section>
+
+                        <section class="detail-block" data-detail-reveal>
+                            <span class="detail-section-label">Alur Perjalanan</span>
+                            <h2>Itinerary</h2>
+                            <div class="itinerary-list" id="itineraryList"></div>
+                        </section>
+
+                        <section class="detail-block" data-detail-reveal>
+                            <span class="detail-section-label">Fasilitas Paket</span>
+                            <h2>Yang termasuk dan tidak termasuk</h2>
+                            <div class="inclusion-grid">
+                                <div class="inclusion-column included"><h3><i class="ri-check-line"></i> Sudah termasuk</h3><ul id="includesList"></ul></div>
+                                <div class="inclusion-column excluded"><h3><i class="ri-close-line"></i> Belum termasuk</h3><ul id="excludesList"></ul></div>
+                            </div>
+                        </section>
+
+                        <section class="detail-block" data-detail-reveal>
+                            <span class="detail-section-label">Persiapan</span>
+                            <h2>Yang perlu dibawa</h2>
+                            <div class="preparation-grid" id="preparationList"></div>
+                            <div class="safety-note"><i class="ri-information-line"></i><p>Kondisi rute dapat berubah mengikuti cuaca. Guide berhak menyesuaikan jalur demi keamanan peserta.</p></div>
+                        </section>
+
+                        <section class="detail-block detail-faq" data-detail-reveal>
+                            <span class="detail-section-label">Informasi Tambahan</span>
+                            <h2>Pertanyaan sebelum memesan</h2>
+                            <details><summary>Apakah perjalanan ini cocok untuk pemula?<i class="ri-add-line"></i></summary><p id="beginnerAnswer">Guide akan menyesuaikan ritme dengan kondisi peserta.</p></details>
+                            <details><summary>Bagaimana jika turun hujan?<i class="ri-add-line"></i></summary><p>Tim akan memantau kondisi jalur. Rute atau jadwal dapat disesuaikan jika kondisi tidak aman.</p></details>
+                            <details><summary>Apakah jadwal bisa dipilih sendiri?<i class="ri-add-line"></i></summary><p>Bisa. Pilih tanggal rencana saat memesan, lalu tim kami akan mengonfirmasi ketersediaan guide.</p></details>
+                        </section>
+                    </div>
+
+                    <aside class="booking-panel" id="bookingPanel" data-detail-reveal>
+                        <div class="booking-price"><span>Mulai dari</span><strong id="bookingPrice">Rp 0</strong><small>/ orang</small></div>
+                        <div class="booking-divider"></div>
+                        <label><span>Tanggal perjalanan</span><input type="date" id="bookingDate"></label>
+                        <div class="guest-control">
+                            <span><strong>Jumlah peserta</strong><small>Usia 5 tahun ke atas</small></span>
+                            <div><button id="decreaseGuests" aria-label="Kurangi peserta"><i class="ri-subtract-line"></i></button><strong id="guestCount">2</strong><button id="increaseGuests" aria-label="Tambah peserta"><i class="ri-add-line"></i></button></div>
+                        </div>
+                        <div class="booking-total"><span>Estimasi total</span><strong id="bookingTotal">Rp 0</strong></div>
+                        <button class="btn btn-accent booking-button" id="bookingButton"><i class="ri-whatsapp-line"></i> Cek Ketersediaan</button>
+                        <p><i class="ri-shield-check-line"></i> Belum ada pembayaran. Tim kami akan mengonfirmasi detail terlebih dahulu.</p>
+                        <div class="booking-help"><span>Butuh bantuan memilih rute?</span><a data-wa-link href="#" target="_blank" rel="noopener">Chat dengan tim <i class="ri-arrow-right-line"></i></a></div>
+                    </aside>
+                </div>
+            </section>
+
+            <section class="related-section">
+                <div class="container">
+                    <div class="section-heading section-heading-row" data-detail-reveal>
+                        <div><span class="eyebrow">Lanjut Menjelajah</span><h2>Rute lain yang mungkin kamu suka.</h2></div>
+                        <a href="/#destinasi" class="text-link">Lihat semua rute <i class="ri-arrow-right-line"></i></a>
+                    </div>
+                    <div class="related-grid" id="relatedTours"></div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer detail-footer">
+        <div class="container footer-grid">
+            <div class="footer-brand"><a href="/" class="logo logo-art-link footer-logo-art" aria-label="Harmoni Trekking Sentul"><span class="brand-logo-art" aria-hidden="true"></span></a><p>Perjalanan trekking Sentul bersama guide lokal untuk keluarga, komunitas, dan perusahaan.</p></div>
+            <div class="footer-links"><strong>Jelajahi</strong><a href="/#about">Tentang Kami</a><a href="/#destinasi">Destinasi</a><a href="/#gallery">Galeri</a><a href="/#contact">Kontak</a></div>
+            <div class="footer-links" id="footerRoutes"><strong>Rute Favorit</strong></div>
+            <div class="footer-links"><strong>Terhubung</strong><a data-wa-link href="#" target="_blank" rel="noopener">WhatsApp</a><a data-ig-link href="#" target="_blank" rel="noopener">Instagram</a><a href="/admin.html">Panel Admin</a></div>
+        </div>
+        <div class="container footer-bottom"><span>&copy; 2026 Harmoni Trekking Sentul</span><span>Sentul, Bogor, Jawa Barat</span></div>
+    </footer>
+
+    <div class="mobile-booking-bar" id="mobileBookingBar">
+        <span><small>Mulai dari</small><strong id="mobilePrice">Rp 0 / pax</strong></span>
+        <a href="#bookingPanel" class="btn btn-accent">Pilih Tanggal</a>
+    </div>
+
+    <div class="detail-lightbox" id="detailLightbox" aria-hidden="true">
+        <button class="icon-button detail-lightbox-close" id="detailLightboxClose" aria-label="Tutup galeri"><i class="ri-close-line"></i></button>
+        <button class="icon-button detail-lightbox-prev" id="detailLightboxPrev" aria-label="Foto sebelumnya"><i class="ri-arrow-left-line"></i></button>
+        <figure><img id="detailLightboxImage" src="" alt="Foto destinasi"><figcaption id="detailLightboxCount">1 / 1</figcaption></figure>
+        <button class="icon-button detail-lightbox-next" id="detailLightboxNext" aria-label="Foto berikutnya"><i class="ri-arrow-right-line"></i></button>
+    </div>
+
+    <div class="copy-toast" id="copyToast">Tautan berhasil disalin</div>
+    <script src="/assets/js/destination.js"></script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Paket trekking Sentul dengan guide lokal berpengalaman, rute pilihan, dan perjalanan yang aman untuk keluarga, komunitas, dan perusahaan.">
+    <meta name="theme-color" content="#173d2b">
+    <title>Harmoni Trekking Sentul | Jelajah Alam Bersama Guide Lokal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+    <header class="navbar" id="navbar">
+        <div class="container navbar-inner">
+            <a href="#home" class="logo logo-art-link" aria-label="Harmoni Trekking Sentul">
+                <span class="brand-logo-art" aria-hidden="true"></span>
+            </a>
+
+            <nav class="nav-menu" id="navMenu" aria-label="Navigasi utama">
+                <a href="#home" class="nav-link active">Beranda</a>
+                <a href="#about" class="nav-link">Tentang</a>
+                <a href="#destinasi" class="nav-link">Destinasi</a>
+                <a href="#gallery" class="nav-link">Galeri</a>
+                <a href="#contact" class="nav-link">Kontak</a>
+            </nav>
+
+            <a href="#contact" class="nav-cta">
+                <i class="ri-calendar-check-line"></i>
+                <span>Rencanakan Trip</span>
+            </a>
+            <button class="menu-toggle" id="menuToggle" aria-label="Buka menu" aria-expanded="false">
+                <i class="ri-menu-3-line"></i>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero" id="home">
+            <div class="hero-slider" id="heroSlider" aria-hidden="true"></div>
+            <div class="hero-overlay"></div>
+            <div class="container hero-layout">
+                <div class="hero-content">
+                    <div class="hero-kicker">
+                        <span class="status-dot"></span>
+                        <span id="heroRouteName">Trip tersedia setiap minggu</span>
+                    </div>
+                    <h1>Trekking Sentul,<br><em>lebih dekat dengan alam.</em></h1>
+                    <p>Perjalanan privat dan kelompok bersama guide lokal yang memahami rute, ritme, dan cerita di setiap sudut Sentul.</p>
+                    <div class="hero-actions">
+                        <a href="#destinasi" class="btn btn-primary btn-lg">Pilih Rute <i class="ri-arrow-right-line"></i></a>
+                        <a href="#about" class="btn btn-ghost btn-lg"><i class="ri-play-circle-line"></i> Kenali Kami</a>
+                    </div>
+                </div>
+
+                <div class="hero-foot">
+                    <div class="hero-proof">
+                        <div><strong>10K+</strong><span>Peserta dipandu</span></div>
+                        <div><strong>4.9/5</strong><span>Rating perjalanan</span></div>
+                        <div><strong>5+</strong><span>Tahun pengalaman</span></div>
+                    </div>
+                    <div class="hero-controls" aria-label="Kontrol slider">
+                        <span class="hero-count"><strong id="heroCurrent">01</strong> / <span id="heroTotal">01</span></span>
+                        <button id="heroPrev" class="icon-button icon-button-light" aria-label="Foto sebelumnya"><i class="ri-arrow-left-line"></i></button>
+                        <button id="heroNext" class="icon-button icon-button-light" aria-label="Foto berikutnya"><i class="ri-arrow-right-line"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="route-finder" aria-label="Cari destinasi">
+            <div class="container finder-layout">
+                <div class="finder-heading">
+                    <span>Temukan perjalananmu</span>
+                    <strong>Mulai dari rute yang tepat</strong>
+                </div>
+                <div class="finder-fields">
+                    <label>
+                        <span>Kategori</span>
+                        <select id="filterCategory"><option value="">Semua rute</option></select>
+                    </label>
+                    <label>
+                        <span>Lokasi</span>
+                        <select id="filterLocation"><option value="">Semua lokasi</option></select>
+                    </label>
+                    <label>
+                        <span>Durasi</span>
+                        <select id="filterDuration">
+                            <option value="">Semua durasi</option>
+                            <option value="1-2">1-2 jam</option>
+                            <option value="2-3">2-3 jam</option>
+                            <option value="3-4">3-4 jam</option>
+                            <option value="4+">4+ jam</option>
+                        </select>
+                    </label>
+                    <button class="btn btn-accent finder-button" id="btnSearch"><i class="ri-search-line"></i> Cari Rute</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="intro section" id="about">
+            <div class="container intro-grid">
+                <div class="intro-media" data-reveal="left">
+                    <img id="aboutMainImage" src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=900&h=1100&fit=crop" alt="Pendaki menikmati panorama Sentul" loading="lazy">
+                    <div class="intro-small-image">
+                        <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?w=500&h=600&fit=crop" alt="Perjalanan trekking bersama guide" loading="lazy">
+                    </div>
+                    <div class="experience-stamp"><strong>5+</strong><span>Tahun<br>menemani</span></div>
+                </div>
+                <div class="intro-copy" data-reveal="right">
+                    <span class="eyebrow">Tentang Harmoni</span>
+                    <h2>Bukan sekadar sampai tujuan, tetapi menikmati perjalanannya.</h2>
+                    <p>Kami merancang trekking yang terasa personal. Guide lokal menyesuaikan ritme, menjaga keamanan, dan membantu setiap peserta menikmati Sentul tanpa terburu-buru.</p>
+                    <div class="value-list">
+                        <div><i class="ri-user-heart-line"></i><span><strong>Guide lokal terlatih</strong><small>Paham medan dan kebutuhan peserta.</small></span></div>
+                        <div><i class="ri-shield-check-line"></i><span><strong>Rute terkurasi</strong><small>Disesuaikan dengan level dan cuaca.</small></span></div>
+                        <div><i class="ri-camera-3-line"></i><span><strong>Momen terdokumentasi</strong><small>Anda fokus menikmati perjalanan.</small></span></div>
+                    </div>
+                    <a href="#destinasi" class="text-link">Lihat seluruh destinasi <i class="ri-arrow-right-line"></i></a>
+                </div>
+            </div>
+        </section>
+
+        <section class="destinations section" id="destinasi">
+            <div class="container">
+                <div class="section-heading section-heading-row" data-reveal>
+                    <div>
+                        <span class="eyebrow">Rute Pilihan</span>
+                        <h2>Temukan sisi Sentul yang ingin kamu jelajahi.</h2>
+                    </div>
+                    <p>Dari jalur santai untuk keluarga hingga petualangan yang lebih menantang.</p>
+                </div>
+                <div class="filter-chips" id="categoryChips" aria-label="Filter kategori"></div>
+                <div class="tours-grid" id="toursGrid" aria-live="polite"></div>
+                <div class="empty-state" id="emptyTours" hidden>
+                    <i class="ri-compass-3-line"></i>
+                    <strong>Rute belum ditemukan</strong>
+                    <span>Coba ubah kategori, lokasi, atau durasi pencarian.</span>
+                </div>
+                <div class="center-action"><button class="btn btn-outline-dark" id="btnLoadMore">Tampilkan Lebih Banyak <i class="ri-arrow-down-line"></i></button></div>
+            </div>
+        </section>
+
+        <section class="journey section">
+            <div class="container">
+                <div class="section-heading centered" data-reveal>
+                    <span class="eyebrow">Perjalanan Tanpa Ribet</span>
+                    <h2>Tiga langkah menuju pengalaman baru.</h2>
+                </div>
+                <div class="journey-steps">
+                    <article data-reveal><span>01</span><i class="ri-route-line"></i><h3>Pilih rute</h3><p>Lihat detail medan, durasi, fasilitas, dan harga pada setiap destinasi.</p></article>
+                    <article data-reveal><span>02</span><i class="ri-chat-3-line"></i><h3>Konsultasikan</h3><p>Sampaikan tanggal dan profil peserta. Kami bantu menyusun trip yang sesuai.</p></article>
+                    <article data-reveal><span>03</span><i class="ri-footprint-line"></i><h3>Mulai melangkah</h3><p>Temui guide di titik temu dan nikmati perjalanan yang sudah disiapkan.</p></article>
+                </div>
+            </div>
+        </section>
+
+        <section class="gallery-section section" id="gallery">
+            <div class="container">
+                <div class="section-heading section-heading-row" data-reveal>
+                    <div><span class="eyebrow">Catatan Perjalanan</span><h2>Momen nyata dari jalur yang kami tempuh.</h2></div>
+                    <p>Klik foto untuk melihat lebih dekat.</p>
+                </div>
+                <div class="gallery-grid" id="galleryGrid"></div>
+            </div>
+        </section>
+
+        <section class="reviews section">
+            <div class="container">
+                <div class="reviews-summary" data-reveal>
+                    <span class="eyebrow eyebrow-light">Cerita Peserta</span>
+                    <h2>Mereka datang untuk trekking, pulang membawa cerita.</h2>
+                    <div class="rating-line"><strong>4.9</strong><span><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><i class="ri-star-fill"></i><small>Berdasarkan pengalaman peserta</small></span></div>
+                </div>
+                <div class="review-list" id="reviewList"></div>
+            </div>
+        </section>
+
+        <section class="faq section">
+            <div class="container faq-grid">
+                <div class="faq-heading" data-reveal>
+                    <span class="eyebrow">Sebelum Berangkat</span>
+                    <h2>Hal yang sering ditanyakan.</h2>
+                    <p>Belum menemukan jawaban yang dibutuhkan? Tim kami siap membantu lewat WhatsApp.</p>
+                    <a class="text-link" href="#contact">Tanyakan langsung <i class="ri-arrow-right-line"></i></a>
+                </div>
+                <div class="faq-list" id="faqList">
+                    <article class="faq-item">
+                        <button aria-expanded="false"><span>Apakah pemula bisa ikut trekking?</span><i class="ri-add-line"></i></button>
+                        <div><p>Bisa. Kami memiliki rute ringan dan akan menyesuaikan tempo dengan kondisi peserta.</p></div>
+                    </article>
+                    <article class="faq-item">
+                        <button aria-expanded="false"><span>Apakah anak-anak dan lansia bisa ikut?</span><i class="ri-add-line"></i></button>
+                        <div><p>Bisa untuk rute tertentu. Beri tahu usia dan kondisi peserta saat konsultasi agar kami dapat merekomendasikan rute yang aman.</p></div>
+                    </article>
+                    <article class="faq-item">
+                        <button aria-expanded="false"><span>Apa yang harus dibawa?</span><i class="ri-add-line"></i></button>
+                        <div><p>Gunakan alas kaki yang nyaman, pakaian ringan, bawa baju ganti, obat pribadi, dan pelindung hujan.</p></div>
+                    </article>
+                    <article class="faq-item">
+                        <button aria-expanded="false"><span>Bagaimana jika cuaca tidak mendukung?</span><i class="ri-add-line"></i></button>
+                        <div><p>Guide akan menilai kondisi jalur. Jadwal atau rute dapat disesuaikan demi keselamatan seluruh peserta.</p></div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="contact-section" id="contact">
+            <div class="container contact-layout">
+                <div class="contact-copy" data-reveal="left">
+                    <span class="eyebrow eyebrow-light">Mulai Rencanakan</span>
+                    <h2>Ceritakan trip yang kamu bayangkan.</h2>
+                    <p>Kirim detail singkat. Tim kami akan membantu memilih rute, waktu, dan format perjalanan yang paling sesuai.</p>
+                    <div class="contact-meta">
+                        <a data-wa-link href="#"><i class="ri-whatsapp-line"></i><span><small>WhatsApp</small><strong data-wa-display>0838-5716-1610</strong></span></a>
+                        <a data-ig-link href="#"><i class="ri-instagram-line"></i><span><small>Instagram</small><strong data-ig-display>@harmonitrekkingsentul</strong></span></a>
+                        <div><i class="ri-map-pin-line"></i><span><small>Titik layanan</small><strong data-address>Sentul, Bogor</strong></span></div>
+                    </div>
+                </div>
+                <form class="contact-form" id="contactForm" data-reveal="right">
+                    <div class="form-heading"><strong>Konsultasi perjalanan</strong><span>Respons melalui WhatsApp</span></div>
+                    <div class="form-row">
+                        <label><span>Nama lengkap</span><input type="text" id="contactName" placeholder="Nama Anda" required></label>
+                        <label><span>No. WhatsApp</span><input type="tel" id="contactPhone" placeholder="08xxxxxxxxxx" required></label>
+                    </div>
+                    <label><span>Destinasi</span><select id="contactDestination" required><option value="">Pilih destinasi</option></select></label>
+                    <div class="form-row">
+                        <label><span>Tanggal rencana</span><input type="date" id="contactDate"></label>
+                        <label><span>Jumlah peserta</span><input type="number" id="contactPax" min="1" max="100" value="2"></label>
+                    </div>
+                    <label><span>Catatan</span><textarea id="contactMessage" rows="3" placeholder="Ceritakan kebutuhan perjalanan Anda..."></textarea></label>
+                    <button type="submit" class="btn btn-accent btn-submit">Kirim ke WhatsApp <i class="ri-whatsapp-line"></i></button>
+                    <small class="privacy-note"><i class="ri-lock-line"></i> Data hanya digunakan untuk membantu konsultasi perjalanan.</small>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-grid">
+            <div class="footer-brand">
+                <a href="#home" class="logo logo-art-link footer-logo-art" aria-label="Harmoni Trekking Sentul"><span class="brand-logo-art" aria-hidden="true"></span></a>
+                <p>Perjalanan trekking Sentul bersama guide lokal untuk keluarga, komunitas, dan perusahaan.</p>
+            </div>
+            <div class="footer-links"><strong>Jelajahi</strong><a href="#about">Tentang Kami</a><a href="#destinasi">Destinasi</a><a href="#gallery">Galeri</a><a href="#contact">Kontak</a></div>
+            <div class="footer-links" id="footerRoutes"><strong>Rute Favorit</strong></div>
+            <div class="footer-links"><strong>Terhubung</strong><a data-wa-link href="#" target="_blank" rel="noopener">WhatsApp</a><a data-ig-link href="#" target="_blank" rel="noopener">Instagram</a><a href="/admin.html">Panel Admin</a></div>
+        </div>
+        <div class="container footer-bottom"><span>&copy; 2026 Harmoni Trekking Sentul</span><span>Sentul, Bogor, Jawa Barat</span></div>
+    </footer>
+
+    <a class="wa-float" data-wa-link href="#" target="_blank" rel="noopener" aria-label="Chat melalui WhatsApp"><i class="ri-whatsapp-line"></i></a>
+
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+        <button class="icon-button lightbox-close" id="lightboxClose" aria-label="Tutup foto"><i class="ri-close-line"></i></button>
+        <img id="lightboxImage" src="" alt="Foto perjalanan">
+        <span id="lightboxCaption"></span>
+    </div>
+
+    <script src="/assets/js/app.js"></script>
+</body>
+</html>

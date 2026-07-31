@@ -1,0 +1,16 @@
+{
+  "name": "harmoni-trekking-sentul",
+  "version": "1.0.0",
+  "description": "Harmoni Trekking Sentul — Wisata Alam",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.22.2",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.35.3",
+    "sql.js": "^1.14.1"
+  }
+}

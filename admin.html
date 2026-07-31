@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Harmoni Trekking Sentul</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Remix Icon -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- Admin CSS -->
+    <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body>
+
+    <!-- ========== LOGIN OVERLAY ========== -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-card">
+            <div class="login-brand" aria-label="Harmoni Trekking Sentul">
+                <span class="admin-logo-art" aria-hidden="true"></span>
+            </div>
+            <h2>Panel Admin</h2>
+            <p>Masukkan password untuk mengakses dashboard</p>
+            <form id="loginForm">
+                <div class="input-group">
+                    <i class="ri-lock-password-line"></i>
+                    <input type="password" id="loginPassword" placeholder="Password" required autocomplete="off">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Masuk <i class="ri-arrow-right-line"></i></button>
+            </form>
+            <p class="login-hint">Gunakan password admin yang tersimpan di pengaturan.</p>
+        </div>
+    </div>
+
+    <!-- ========== ADMIN LAYOUT ========== -->
+    <div class="admin-layout" id="adminLayout" style="display:none;">
+
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-brand">
+                <span class="admin-logo-art" aria-label="Harmoni Trekking Sentul"></span>
+                <span class="sidebar-panel-label">Panel Admin</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="sidebar-link active" data-page="dashboard">
+                    <i class="ri-dashboard-3-line"></i> Dashboard
+                </a>
+                <a href="#" class="sidebar-link" data-page="tours">
+                    <i class="ri-road-map-line"></i> Destinasi
+                </a>
+                <a href="#" class="sidebar-link" data-page="slider">
+                    <i class="ri-slideshow-line"></i> Slider
+                </a>
+                <a href="#" class="sidebar-link" data-page="gallery">
+                    <i class="ri-gallery-line"></i> Galeri
+                </a>
+                <a href="#" class="sidebar-link" data-page="settings">
+                    <i class="ri-settings-3-line"></i> Pengaturan
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="index.html" class="sidebar-link">
+                    <i class="ri-external-link-line"></i> Buka Website
+                </a>
+                <button class="sidebar-link" id="btnLogout">
+                    <i class="ri-logout-box-r-line"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="admin-main">
+            <!-- Top Bar -->
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" id="sidebarToggle"><i class="ri-menu-2-line"></i></button>
+                    <h2 id="pageTitle">Dashboard</h2>
+                </div>
+                <div class="topbar-right">
+                    <span class="topbar-time" id="adminClock">--</span>
+                    <a href="index.html" class="btn btn-sm btn-outline" target="_blank">
+                        <i class="ri-eye-line"></i> Lihat Website
+                    </a>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="admin-content">
+
+                <!-- ===== PAGE: DASHBOARD ===== -->
+                <div class="page active" id="pageDashboard">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="ri-road-map-line"></i></div>
+                            <div>
+                                <span class="stat-num" id="statTours">0</span>
+                                <span class="stat-label">Total Destinasi</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:#eaf5ed;color:#3a7248;"><i class="ri-slideshow-line"></i></div>
+                            <div>
+                                <span class="stat-num" id="statSlides">0</span>
+                                <span class="stat-label">Slide Hero</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="ri-gallery-line"></i></div>
+                            <div>
+                                <span class="stat-num" id="statGallery">0</span>
+                                <span class="stat-label">Gambar Galeri</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background:#ede9fe;color:#7c3aed;"><i class="ri-map-pin-line"></i></div>
+                            <div>
+                                <span class="stat-num" id="statLocations">0</span>
+                                <span class="stat-label">Lokasi</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header card-header-actions">
+                            <h3>Background Beranda</h3>
+                            <div class="header-actions">
+                                <button class="btn btn-sm btn-outline" id="btnDashboardManageSlider"><i class="ri-slideshow-line"></i> Kelola Slider</button>
+                                <button class="btn btn-sm btn-primary" id="btnDashboardAddSlide"><i class="ri-image-add-line"></i> Ganti Background</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="dashboard-hero-preview" id="dashboardHeroPreview">
+                                <div class="dashboard-hero-preview-overlay"></div>
+                                <div class="dashboard-hero-preview-meta">
+                                    <span id="dashboardHeroCount">0 slide aktif</span>
+                                    <strong id="dashboardHeroTitle">Default bawaan</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><h3>Destinasi Terbaru</h3></div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr><th>Destinasi</th><th>Kategori</th><th>Durasi</th><th>Harga</th><th>Aksi</th></tr>
+                                </thead>
+                                <tbody id="dashboardTourTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PAGE: TOURS ===== -->
+                <div class="page" id="pageTours">
+                    <div class="page-actions">
+                        <button class="btn btn-primary" id="btnAddTour"><i class="ri-add-line"></i> Tambah Destinasi</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3>Daftar Destinasi</h3></div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr><th>Gambar</th><th>Nama</th><th>Kategori</th><th>Lokasi</th><th>Durasi</th><th>Harga</th><th>Aksi</th></tr>
+                                </thead>
+                                <tbody id="toursTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PAGE: SLIDER ===== -->
+                <div class="page" id="pageSlider">
+                    <div class="page-actions">
+                        <button class="btn btn-primary" id="btnAddSlide"><i class="ri-add-line"></i> Tambah Slide</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3>Daftar Slide Hero</h3></div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead><tr><th>Gambar</th><th>Judul</th><th>Aksi</th></tr></thead>
+                                <tbody id="sliderTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PAGE: GALLERY ===== -->
+                <div class="page" id="pageGallery">
+                    <div class="page-actions">
+                        <button class="btn btn-primary" id="btnAddGallery"><i class="ri-add-line"></i> Tambah Gambar</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3>Daftar Galeri</h3></div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead><tr><th>Gambar</th><th>Caption</th><th>Aksi</th></tr></thead>
+                                <tbody id="galleryTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PAGE: SETTINGS ===== -->
+                <div class="page" id="pageSettings">
+                    <div class="card">
+                        <div class="card-header"><h3>Pengaturan Kontak</h3></div>
+                        <div class="card-body">
+                            <form id="settingsForm" class="form">
+                                <div class="form-group">
+                                    <label>Nomor WhatsApp</label>
+                                    <input type="text" id="setWa" placeholder="083857161610">
+                                </div>
+                                <div class="form-group">
+                                    <label>Username Instagram</label>
+                                    <input type="text" id="setIg" placeholder="harmonitrekkingsentul">
+                                </div>
+                                <div class="form-group">
+                                    <label>Alamat</label>
+                                    <textarea id="setAddress" rows="3" placeholder="Alamat lengkap..."></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>Ganti Password Admin</label>
+                                    <input type="text" id="setPassword" placeholder="Password baru...">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Simpan Pengaturan</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ========== TOUR FORM MODAL ========== -->
+    <div class="modal-overlay" id="tourModalOverlay">
+        <div class="modal modal-tour" id="tourModal">
+            <div class="modal-header">
+                <h3 id="tourModalTitle">Tambah Destinasi</h3>
+                <button class="modal-close" id="tourModalClose"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="tourForm" class="form">
+                    <input type="hidden" id="tourId">
+                    <div class="form-row">
+                        <div class="form-group flex-2">
+                            <label>Nama Destinasi *</label>
+                            <input type="text" id="tourName" required placeholder="Contoh: Curug Leuwi Hejo">
+                        </div>
+                        <div class="form-group">
+                            <label>Lokasi *</label>
+                            <input type="text" id="tourLocation" required placeholder="Sentul">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Kategori</label>
+                            <input type="text" id="tourCategory" placeholder="Rute Standar">
+                        </div>
+                        <div class="form-group">
+                            <label>Durasi *</label>
+                            <input type="text" id="tourDuration" required placeholder="2-3 jam">
+                        </div>
+                        <div class="form-group">
+                            <label>Harga (Rp) *</label>
+                            <input type="number" id="tourPrice" required placeholder="150000">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tingkat Kesulitan</label>
+                            <select id="tourDifficulty">
+                                <option value="Mudah">Mudah</option>
+                                <option value="Sedang" selected>Sedang</option>
+                                <option value="Menantang">Menantang</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Jarak Tempuh</label>
+                            <input type="text" id="tourDistance" placeholder="Contoh: 4,5 km">
+                        </div>
+                        <div class="form-group flex-2">
+                            <label>Titik Temu</label>
+                            <input type="text" id="tourMeetingPoint" placeholder="Contoh: Sentul, Bogor">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Gambar Destinasi</label>
+                        <input type="file" id="tourFileInput" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.avif" multiple>
+                        <small>Bisa pilih lebih dari 1 gambar. Format: JPG, PNG, WebP, GIF, BMP, atau AVIF. Maks 20MB/file.</small>
+                        <div id="existingImages" class="existing-images"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Deskripsi Singkat</label>
+                        <textarea id="tourDescription" rows="3" placeholder="Deskripsi singkat destinasi..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label><i class="ri-route-line" style="color:#3a7248;"></i> Itinerary Perjalanan</label>
+                            <textarea id="tourItinerary" rows="5" placeholder="Registrasi dan briefing&#10;Mulai trekking&#10;Istirahat di destinasi utama&#10;Kembali ke titik temu"></textarea>
+                            <small>Tulis satu tahapan per baris.</small>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label><i class="ri-backpack-line" style="color:#d97706;"></i> Yang Perlu Dibawa</label>
+                            <textarea id="tourPreparations" rows="5" placeholder="Sepatu trekking&#10;Pakaian ganti&#10;Obat pribadi&#10;Jas hujan"></textarea>
+                            <small>Tulis satu perlengkapan per baris.</small>
+                        </div>
+                    </div>
+
+                    <!-- Include & Exclude -->
+                    <div class="form-row">
+                        <div class="form-group flex-1">
+                            <label><i class="ri-check-line" style="color:#3a7248;"></i> Include (yang sudah termasuk)</label>
+                            <div class="tag-input" id="includeTags">
+                                <div class="tag-list" id="includeList"></div>
+                                <input type="text" id="includeInput" placeholder="Tambah item include..." class="tag-add-input">
+                            </div>
+                            <small>Contoh: Guide Profesional, Air Mineral, Dokumentasi Foto</small>
+                        </div>
+                        <div class="form-group flex-1">
+                            <label><i class="ri-close-line" style="color:#dc4c4c;"></i> Exclude (yang tidak termasuk)</label>
+                            <div class="tag-input" id="excludeTags">
+                                <div class="tag-list" id="excludeList"></div>
+                                <input type="text" id="excludeInput" placeholder="Tambah item exclude..." class="tag-add-input">
+                            </div>
+                            <small>Contoh: Transportasi ke lokasi, Asuransi, Makan siang</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-full">Simpan Destinasi</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== SLIDE/GALLERY FORM MODAL ========== -->
+    <div class="modal-overlay" id="simpleModalOverlay">
+        <div class="modal modal-sm" id="simpleModal">
+            <div class="modal-header">
+                <h3 id="simpleModalTitle">Tambah</h3>
+                <button class="modal-close" id="simpleModalClose"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body" id="simpleModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Admin JS -->
+    <script src="assets/js/admin.js"></script>
+</body>
+</html>
