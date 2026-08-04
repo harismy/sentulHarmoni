@@ -4,7 +4,7 @@
    ============================================ */
 
 const API = '';
-const DEFAULT_HERO_BACKGROUND = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1400&h=800&fit=crop';
+const DEFAULT_HERO_BACKGROUND = '/uploads/slide-album-curug-leuwi-hejo.webp';
 
 // =============================================
 // STATE

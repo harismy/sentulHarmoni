@@ -218,38 +218,48 @@ async function init() {
 }
 
 function seedData() {
+  const includes = ['Guide Profesional', 'Air Mineral', 'Dokumentasi Foto', 'Tiket Masuk'];
+  const excludes = ['Transportasi ke Lokasi', 'Makan Siang', 'Asuransi Pribadi'];
+  const itinerary = JSON.stringify([
+    'Bertemu dengan guide dan briefing perjalanan',
+    'Trekking menyusuri jalur alam menuju destinasi',
+    'Istirahat, menikmati destinasi, dan dokumentasi',
+    'Kembali menuju titik pertemuan',
+  ]);
+  const preparations = JSON.stringify([
+    'Gunakan alas kaki trekking yang tidak licin',
+    'Bawa pakaian ganti dan perlindungan dari hujan',
+    'Pastikan kondisi tubuh sehat sebelum perjalanan',
+  ]);
   const tours = [
-    { name:'Curug Leuwi Hejo — Curug Cepet', location:'Sentul', duration:'2-3 jam', price:150000, category:'Rute Standar',
-      description:'Trekking menyusuri curug terindah di Sentul. Melewati hutan tropis, sungai alami, dan pemandangan perbukitan yang memukau.',
-      includes:['Guide Profesional','Air Mineral','Dokumentasi Foto','Tiket Masuk','Snack Ringan'],
-      excludes:['Transportasi ke Lokasi','Makan Siang','Asuransi Pribadi'] },
-    { name:'Bukit Indah — Curug Bidadari', location:'Sentul', duration:'1-2 jam', price:150000, category:'Rute Ringan',
-      description:'Rute santai cocok untuk pemula dan keluarga. Melewati pemukiman warga, persawahan, perkebunan, bukit, dan sungai.',
-      includes:['Guide Profesional','Air Mineral','Dokumentasi Foto','Tiket Masuk'],
-      excludes:['Transportasi ke Lokasi','Makan Siang'] },
-    { name:'Goa Agung Garunggang', location:'Sentul', duration:'2-3 jam', price:150000, category:'Rute Standar',
-      description:'Eksplorasi goa alam yang menakjubkan dengan stalaktit dan stalakmit alami.',
-      includes:['Guide Profesional','Air Mineral','Dokumentasi Foto','Tiket Masuk','Peralatan Safety'],
-      excludes:['Transportasi ke Lokasi','Makan Siang','Asuransi Pribadi'] },
-    { name:'Curug Cibingbin — Curug Ngumpet', location:'Sentul', duration:'2-3 jam', price:150000, category:'Rute Standar',
-      description:'Jelajahi dua curug sekaligus dalam satu perjalanan.',
-      includes:['Guide Profesional','Air Mineral','Dokumentasi Foto','Tiket Masuk'],
-      excludes:['Transportasi ke Lokasi','Makan Siang','Asuransi Pribadi'] },
-    { name:'Wisata Offroad Sentul Hambalang', location:'Sentul', duration:'2-3 jam', price:1200000, category:'Rute Hard',
-      description:'Sensasi offroad menggunakan jeep 4x4 menyusuri jalur ekstrem Sentul.',
-      includes:['Driver Profesional','Jeep 4x4','Air Mineral','Dokumentasi Foto','Snack'],
-      excludes:['Makan Siang','Asuransi Kendaraan','Biaya Tol & Parkir'] },
-    { name:'Trekking Sentul Corporate', location:'Sentul', duration:'1-2 jam', price:265000, category:'Rute Ringan',
-      description:'Program team building di alam terbuka. Cocok untuk acara kantor atau gathering.',
-      includes:['Guide Profesional','Air Mineral','Dokumentasi Foto','Permainan Team Building','Snack & Coffee Break'],
-      excludes:['Transportasi Peserta','Makan Siang','Seragam/T-shirt'] },
+    { name: 'Curug Leuwi Hejo - Curug Cepet', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Mudah', distance: '4-5 km',
+      description: 'Trekking menyusuri sungai dan hutan menuju kolam alami Curug Leuwi Hejo yang berair jernih.' },
+    { name: 'Goa Agung Garunggang', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4-5 km',
+      description: 'Eksplorasi formasi batu dan goa alami Goa Agung Garunggang bersama guide lokal.' },
+    { name: 'Curug Cibingbin - Curug Ngumpet', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4-5 km',
+      description: 'Trekking menuju Curug Cibingbin melalui aliran air, bebatuan, dan jalur hijau Sentul.' },
+    { name: 'Wisata Offroad Sentul Hambalang', duration: '2-3 jam', price: 1200000, category: 'Rute Hard', difficulty: 'Menantang', distance: 'Menyesuaikan',
+      description: 'Perjalanan jeep 4x4 melewati jalur tanah, sungai, dan perbukitan Hambalang.' },
+    { name: 'Curug Cibaliung', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4 km',
+      description: 'Trekking menuju Curug Cibaliung dengan kolam alami jernih, tebing batu, dan suasana hutan yang sejuk.' },
+    { name: 'Curug Hordeng', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4-5 km',
+      description: 'Jalur trekking hijau menuju Curug Hordeng dengan aliran air bertingkat di tengah hutan Sentul.' },
+    { name: 'Curug Leuwi Asih', duration: '1-2 jam', price: 150000, category: 'Rute Ringan', difficulty: 'Mudah', distance: '3 km',
+      description: 'Rute ramah keluarga menuju Leuwi Asih melalui area persawahan dan jalur desa.' },
+    { name: 'Curug Love', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4 km',
+      description: 'Perjalanan melintasi sawah, rumpun bambu, dan jalur hutan menuju Curug Love.' },
   ];
 
   for (const t of tours) {
-    const id = dbRun('INSERT INTO tours (name, location, duration, price, category, description) VALUES (?,?,?,?,?,?)',
-      [t.name, t.location, t.duration, t.price, t.category, t.description]);
-    for (const item of t.includes) dbRun('INSERT INTO tour_includes (tour_id, item) VALUES (?,?)', [id, item]);
-    for (const item of t.excludes) dbRun('INSERT INTO tour_excludes (tour_id, item) VALUES (?,?)', [id, item]);
+    const id = dbRun(
+      `INSERT INTO tours
+        (name, location, duration, price, category, description, difficulty, distance, meeting_point, itinerary, preparations)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+      [t.name, 'Sentul', t.duration, t.price, t.category, t.description, t.difficulty, t.distance,
+        'Sentul, Bogor', itinerary, preparations],
+    );
+    for (const item of includes) dbRun('INSERT INTO tour_includes (tour_id, item) VALUES (?,?)', [id, item]);
+    for (const item of excludes) dbRun('INSERT INTO tour_excludes (tour_id, item) VALUES (?,?)', [id, item]);
   }
   saveDb();
   console.log('✅ Default tours seeded');

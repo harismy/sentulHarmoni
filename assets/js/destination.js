@@ -1,17 +1,19 @@
 const DETAIL_TOUR_IMAGES = [
-    'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=1400&h=1000&fit=crop',
-    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1400&h=1000&fit=crop',
-    'https://images.unsplash.com/photo-1533105079780-92b9be482077?w=1400&h=1000&fit=crop',
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1400&h=1000&fit=crop',
-    'https://images.unsplash.com/photo-1533130061792-64b345e4a833?w=1400&h=1000&fit=crop',
-    'https://images.unsplash.com/photo-1517825738774-7de9363ef735?w=1400&h=1000&fit=crop'
+    '/uploads/album-curug-leuwi-hejo-01.webp',
+    '/uploads/album-goa-garunggang-01.webp',
+    '/uploads/album-curug-cibingbin-01.webp',
+    '/uploads/album-offroad-hambalang-01.webp',
+    '/uploads/album-curug-cibaliung-01.webp',
+    '/uploads/album-curug-hordeng-01.webp',
+    '/uploads/album-curug-leuwi-asih-01.webp',
+    '/uploads/album-curug-love-01.webp'
 ];
 
 const DETAIL_SUPPORT_IMAGES = [
-    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1100&h=900&fit=crop',
-    'https://images.unsplash.com/photo-1551632811-561732d1e306?w=1100&h=900&fit=crop',
-    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1100&h=900&fit=crop',
-    'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1100&h=900&fit=crop'
+    '/uploads/gallery-album-curug-leuwi-hejo.webp',
+    '/uploads/gallery-album-curug-cibingbin.webp',
+    '/uploads/gallery-album-curug-love.webp',
+    '/uploads/gallery-album-goa-garunggang.webp'
 ];
 
 const DEFAULT_ITINERARY = [

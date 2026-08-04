@@ -96,6 +96,14 @@ const ALBUMS = [
   },
 ];
 
+const HERO_SLIDES = [
+  { folder: 'CURUG LEWI HEJO', slug: 'curug-leuwi-hejo', source: 'IMG-20260804-WA0019.jpg', title: 'Curug Leuwi Hejo' },
+  { folder: 'CURUG CIBINGBIN', slug: 'curug-cibingbin', source: 'IMG-20260804-WA0025.jpg', title: 'Curug Cibingbin' },
+  { folder: 'curug hordeng', slug: 'curug-hordeng', source: 'IMG-20260804-WA0070.jpg', title: 'Curug Hordeng' },
+  { folder: 'Offroad hambalang', slug: 'offroad-hambalang', source: 'IMG-20260804-WA0063.jpg', title: 'Offroad Hambalang' },
+  { folder: 'Trekking GoaGarungag', slug: 'goa-garunggang', source: 'IMG-20260804-WA0040.jpg', title: 'Goa Agung Garunggang' },
+];
+
 function rows(db, sql, params = []) {
   const statement = db.prepare(sql);
   statement.bind(params);
@@ -146,11 +154,29 @@ function createTour(db, album) {
 }
 
 async function optimize(source, destination, maxSize = 1600) {
+  if (fs.existsSync(destination) && fs.statSync(destination).mtimeMs >= fs.statSync(source).mtimeMs) return;
   await sharp(source)
     .rotate()
     .resize({ width: maxSize, height: maxSize, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 80, effort: 4 })
     .toFile(destination);
+}
+
+function removeDummyTours(db) {
+  const dummyTours = rows(db,
+    "SELECT id, name FROM tours WHERE name LIKE 'Bukit Indah%' OR name='Trekking Sentul Corporate'");
+  for (const tour of dummyTours) {
+    const images = rows(db, 'SELECT filename FROM tour_images WHERE tour_id=?', [tour.id]);
+    images.forEach(image => {
+      const filePath = path.join(UPLOADS_DIR, image.filename);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    });
+    db.run('DELETE FROM tour_images WHERE tour_id=?', [tour.id]);
+    db.run('DELETE FROM tour_includes WHERE tour_id=?', [tour.id]);
+    db.run('DELETE FROM tour_excludes WHERE tour_id=?', [tour.id]);
+    db.run('DELETE FROM tours WHERE id=?', [tour.id]);
+    console.log(`Removed placeholder destination: ${tour.name}`);
+  }
 }
 
 async function replaceTourImages(db, album, tourId) {
@@ -196,6 +222,30 @@ async function replaceGalleryImages(db) {
   }
 }
 
+async function replaceHeroSlides(db) {
+  const previous = rows(db, 'SELECT filename FROM slides');
+  previous.forEach(image => {
+    const references = row(db,
+      'SELECT (SELECT COUNT(*) FROM tour_images WHERE filename=?) + (SELECT COUNT(*) FROM gallery WHERE filename=?) AS count',
+      [image.filename, image.filename]);
+    const filePath = path.join(UPLOADS_DIR, image.filename);
+    if (!references.count && fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  });
+  db.run('DELETE FROM slides');
+
+  for (const slide of HERO_SLIDES) {
+    const filename = `slide-album-${slide.slug}.webp`;
+    const source = path.join(ALBUMS_DIR, slide.folder, slide.source);
+    const destination = path.join(UPLOADS_DIR, filename);
+    await sharp(source)
+      .rotate()
+      .resize({ width: 1600, height: 900, fit: 'cover', position: 'attention' })
+      .webp({ quality: 82, effort: 4 })
+      .toFile(destination);
+    db.run('INSERT INTO slides (filename, title) VALUES (?,?)', [filename, slide.title]);
+  }
+}
+
 async function main() {
   if (!fs.existsSync(DB_PATH)) throw new Error('harmoni.db not found. Start the application once before importing albums.');
   if (!fs.existsSync(ALBUMS_DIR)) throw new Error('MyAlbums directory not found.');
@@ -206,6 +256,7 @@ async function main() {
 
   try {
     db.run('BEGIN');
+    removeDummyTours(db);
     for (const album of ALBUMS) {
       let tour = findTour(db, album);
       if (!tour) {
@@ -217,9 +268,11 @@ async function main() {
       console.log(`Imported ${count} photos: ${tour.name}`);
     }
     await replaceGalleryImages(db);
+    await replaceHeroSlides(db);
     db.run('COMMIT');
     fs.writeFileSync(DB_PATH, Buffer.from(db.export()));
     console.log(`Gallery updated with ${ALBUMS.length} selected photos.`);
+    console.log(`Hero updated with ${HERO_SLIDES.length} real photos.`);
   } catch (error) {
     try { db.run('ROLLBACK'); } catch (_) {}
     throw error;

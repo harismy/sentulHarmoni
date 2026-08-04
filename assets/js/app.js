@@ -1,42 +1,35 @@
 const API_BASE = '';
 
 const FALLBACK_SLIDES = [
-    { id: 1, image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1800&h=1100&fit=crop', title: 'Bentang alam Sentul' },
-    { id: 2, image: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?w=1800&h=1100&fit=crop', title: 'Udara pagi di perbukitan' },
-    { id: 3, image: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1800&h=1100&fit=crop', title: 'Jalur hijau yang menenangkan' }
+    { id: 1, image: '/uploads/slide-album-curug-leuwi-hejo.webp', title: 'Curug Leuwi Hejo' },
+    { id: 2, image: '/uploads/slide-album-curug-cibingbin.webp', title: 'Curug Cibingbin' },
+    { id: 3, image: '/uploads/slide-album-curug-hordeng.webp', title: 'Curug Hordeng' },
+    { id: 4, image: '/uploads/slide-album-offroad-hambalang.webp', title: 'Offroad Hambalang' },
+    { id: 5, image: '/uploads/slide-album-goa-garunggang.webp', title: 'Goa Agung Garunggang' }
 ];
 
 const TOUR_IMAGES = [
-    'https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=900&h=700&fit=crop',
-    'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=900&h=700&fit=crop',
-    'https://images.unsplash.com/photo-1533105079780-92b9be482077?w=900&h=700&fit=crop',
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=900&h=700&fit=crop',
-    'https://images.unsplash.com/photo-1533130061792-64b345e4a833?w=900&h=700&fit=crop',
-    'https://images.unsplash.com/photo-1517825738774-7de9363ef735?w=900&h=700&fit=crop'
+    '/uploads/album-curug-leuwi-hejo-01.webp',
+    '/uploads/album-curug-cibingbin-01.webp',
+    '/uploads/album-curug-cibaliung-01.webp',
+    '/uploads/album-curug-hordeng-01.webp',
+    '/uploads/album-curug-leuwi-asih-01.webp',
+    '/uploads/album-curug-love-01.webp',
+    '/uploads/album-offroad-hambalang-01.webp',
+    '/uploads/album-goa-garunggang-01.webp'
 ];
 
-const FALLBACK_TOURS = [
-    { id: 1, name: 'Curug Leuwi Hejo - Curug Cepet', location: 'Sentul', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4 km', description: 'Trekking menyusuri sungai dan hutan menuju curug berair jernih.', images: [], includes: ['Guide profesional', 'Air mineral', 'Tiket masuk'], excludes: ['Transportasi'], itinerary: [], preparations: [] },
-    { id: 2, name: 'Bukit Indah - Curug Bidadari', location: 'Sentul', duration: '1-2 jam', price: 150000, category: 'Rute Ringan', difficulty: 'Mudah', distance: '3 km', description: 'Rute santai untuk pemula dan keluarga.', images: [], includes: ['Guide profesional', 'Air mineral'], excludes: ['Transportasi'], itinerary: [], preparations: [] },
-    { id: 3, name: 'Goa Agung Garunggang', location: 'Sentul', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4,5 km', description: 'Eksplorasi goa alam dan lanskap berbatu yang unik.', images: [], includes: ['Guide profesional', 'Peralatan safety'], excludes: ['Transportasi'], itinerary: [], preparations: [] },
-    { id: 4, name: 'Curug Cibingbin - Curug Ngumpet', location: 'Sentul', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '5 km', description: 'Dua curug dalam satu perjalanan hijau.', images: [], includes: ['Guide profesional', 'Tiket masuk'], excludes: ['Transportasi'], itinerary: [], preparations: [] },
-    { id: 5, name: 'Offroad Sentul Hambalang', location: 'Hambalang', duration: '2-3 jam', price: 1200000, category: 'Petualangan', difficulty: 'Menantang', distance: 'Menyesuaikan', description: 'Perjalanan jeep 4x4 melintasi jalur Hambalang.', images: [], includes: ['Jeep 4x4', 'Driver profesional'], excludes: ['Makan siang'], itinerary: [], preparations: [] },
-    { id: 6, name: 'Trekking Sentul Corporate', location: 'Sentul', duration: '1-2 jam', price: 265000, category: 'Corporate', difficulty: 'Mudah', distance: '3 km', description: 'Program alam untuk membangun kebersamaan tim.', images: [], includes: ['Guide', 'Team building'], excludes: ['Transportasi'], itinerary: [], preparations: [] }
-];
+const FALLBACK_TOURS = [];
 
 const FALLBACK_GALLERY = [
-    { id: 'f1', image: 'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=1000&h=900&fit=crop', caption: 'Pagi di perbukitan' },
-    { id: 'f2', image: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=700&h=700&fit=crop', caption: 'Melangkah bersama' },
-    { id: 'f3', image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=700&h=700&fit=crop', caption: 'Sampai di ketinggian' },
-    { id: 'f4', image: 'https://images.unsplash.com/photo-1445307806294-bff7f67ff225?w=700&h=700&fit=crop', caption: 'Jalur yang tenang' },
-    { id: 'f5', image: 'https://images.unsplash.com/photo-1439853949127-fa647821eba0?w=700&h=700&fit=crop', caption: 'Alam yang terbuka' },
-    { id: 'f6', image: 'https://images.unsplash.com/photo-1464278533981-50106e6176b1?w=1000&h=700&fit=crop', caption: 'Cerita di setiap langkah' }
-];
-
-const REVIEWS = [
-    { name: 'Rina Wulandari', initials: 'RW', type: 'Family trip', text: 'Guide sangat sabar mengatur tempo anak-anak. Perjalanan terasa aman, santai, dan tetap seru sampai akhir.' },
-    { name: 'Ahmad Fauzi', initials: 'AF', type: 'Private trip', text: 'Semua detail dijelaskan sejak awal. Rutenya bagus, dokumentasinya juga natural. Tinggal datang dan menikmati.' },
-    { name: 'Dewi Anggraini', initials: 'DA', type: 'Corporate trip', text: 'Tim kami pulang dengan energi baru. Rundown rapi dan guide bisa membuat seluruh peserta tetap terlibat.' }
+    { id: 'f1', image: '/uploads/gallery-album-curug-cibaliung.webp', caption: 'Curug Cibaliung' },
+    { id: 'f2', image: '/uploads/gallery-album-curug-cibingbin.webp', caption: 'Curug Cibingbin' },
+    { id: 'f3', image: '/uploads/gallery-album-curug-hordeng.webp', caption: 'Curug Hordeng' },
+    { id: 'f4', image: '/uploads/gallery-album-curug-leuwi-asih.webp', caption: 'Curug Leuwi Asih' },
+    { id: 'f5', image: '/uploads/gallery-album-curug-leuwi-hejo.webp', caption: 'Curug Leuwi Hejo' },
+    { id: 'f6', image: '/uploads/gallery-album-curug-love.webp', caption: 'Curug Love' },
+    { id: 'f7', image: '/uploads/gallery-album-offroad-hambalang.webp', caption: 'Offroad Hambalang' },
+    { id: 'f8', image: '/uploads/gallery-album-goa-garunggang.webp', caption: 'Goa Agung Garunggang' }
 ];
 
 let slides = [];
@@ -118,7 +111,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initFilters();
     renderTours();
     renderGallery();
-    renderReviews();
     initFaq();
     applySettings();
     initContactForm();
@@ -292,18 +284,6 @@ function renderGallery() {
         const item = event.target.closest('.gallery-item');
         if (item) openLightbox(gallery[Number(item.dataset.galleryIndex)]);
     });
-}
-
-function renderReviews() {
-    document.getElementById('reviewList').innerHTML = REVIEWS.map(review => `
-        <article class="review-item" data-reveal>
-            <blockquote>"${escapeHtml(review.text)}"</blockquote>
-            <div class="review-author">
-                <span class="review-person"><span class="review-avatar" aria-hidden="true">${review.initials}</span><strong>${escapeHtml(review.name)}</strong></span>
-                <small>${escapeHtml(review.type)}</small>
-            </div>
-        </article>
-    `).join('');
 }
 
 function initFaq() {
