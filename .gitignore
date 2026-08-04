@@ -22,6 +22,9 @@ pnpm-debug.log*
 # User-uploaded media
 uploads/
 
+# Local source albums (imported into uploads with npm run import:albums)
+MyAlbums/
+
 # Build output and test coverage
 dist/
 build/
