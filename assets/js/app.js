@@ -244,24 +244,27 @@ function renderTours() {
     const items = filteredTours.slice(0, visibleTours);
     grid.innerHTML = items.map((tour, index) => `
         <article class="tour-card" data-reveal style="transition-delay:${Math.min(index % 3, 2) * 80}ms">
-            <a href="/destinasi/${encodeURIComponent(tour.id)}" class="tour-card-image" aria-label="Lihat detail ${escapeHtml(tour.name)}">
-                <img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy">
-                <span class="tour-badge">${escapeHtml(tour.category || 'Wisata')}</span>
-                <span class="tour-photo-count"><i class="ri-camera-line"></i> ${tour.resolvedImages.length} foto</span>
+            <a href="/destinasi/${encodeURIComponent(tour.id)}" class="tour-card-link" aria-label="Klik untuk melihat detail ${escapeHtml(tour.name)}">
+                <div class="tour-card-image">
+                    <img src="${escapeHtml(tour.image)}" alt="${escapeHtml(tour.name)}" loading="lazy">
+                    <span class="tour-badge">${escapeHtml(tour.category || 'Wisata')}</span>
+                    <span class="tour-photo-count"><i class="ri-camera-line"></i> ${tour.resolvedImages.length} foto</span>
+                </div>
+                <div class="tour-card-body">
+                    <span class="tour-location"><i class="ri-map-pin-2-line"></i> ${escapeHtml(tour.location || 'Sentul')}, Bogor</span>
+                    <h3>${escapeHtml(tour.name)}</h3>
+                    <p class="tour-description">${escapeHtml(tour.description || `Jelajahi ${tour.name} bersama guide lokal Harmoni Trekking.`)}</p>
+                    <div class="tour-meta">
+                        <span title="Durasi"><i class="ri-time-line"></i> ${escapeHtml(tour.duration || '-')}</span>
+                        <span title="Kesulitan"><i class="ri-bar-chart-line"></i> ${escapeHtml(tour.difficulty)}</span>
+                        <span title="Jarak"><i class="ri-road-map-line"></i> ${escapeHtml(tour.distance)}</span>
+                    </div>
+                    <div class="tour-card-footer">
+                        <div class="tour-price"><small>Mulai dari</small><strong>Rp ${formatPrice(tour.price)} / pax</strong></div>
+                    </div>
+                    <span class="tour-card-action"><i class="ri-eye-line"></i> Klik untuk melihat detail <i class="ri-arrow-right-line"></i></span>
+                </div>
             </a>
-            <div class="tour-card-body">
-                <span class="tour-location"><i class="ri-map-pin-2-line"></i> ${escapeHtml(tour.location || 'Sentul')}</span>
-                <h3>${escapeHtml(tour.name)}</h3>
-                <div class="tour-meta">
-                    <span title="Durasi"><i class="ri-time-line"></i> ${escapeHtml(tour.duration || '-')}</span>
-                    <span title="Kesulitan"><i class="ri-bar-chart-line"></i> ${escapeHtml(tour.difficulty)}</span>
-                    <span title="Jarak"><i class="ri-road-map-line"></i> ${escapeHtml(tour.distance)}</span>
-                </div>
-                <div class="tour-card-footer">
-                    <div class="tour-price"><small>Mulai dari</small><strong>Rp ${formatPrice(tour.price)} / pax</strong></div>
-                    <a href="/destinasi/${encodeURIComponent(tour.id)}" class="tour-detail-link" aria-label="Buka detail ${escapeHtml(tour.name)}"><i class="ri-arrow-right-line"></i></a>
-                </div>
-            </div>
         </article>
     `).join('');
 
