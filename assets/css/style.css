@@ -23,7 +23,7 @@
     --transition: 260ms cubic-bezier(.2, .7, .2, 1);
 }
 
-html { scroll-behavior: smooth; scroll-padding-top: 82px; background: var(--surface-soft); }
+html { scroll-behavior: smooth; scroll-padding-top: 82px; background: var(--forest-950); }
 body {
     background: var(--surface-soft);
     color: var(--ink);
@@ -144,7 +144,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .navbar.scrolled .menu-toggle, .navbar.is-solid .menu-toggle { background: var(--forest-50); }
 
 /* Hero */
-.hero { position: relative; min-height: 690px; height: 92svh; max-height: 900px; display: flex; color: var(--white); background: var(--forest-950); overflow: hidden; }
+.hero { position: relative; width: 100%; min-height: 690px; height: 92svh; max-height: 900px; display: flex; color: var(--white); background: var(--forest-950); overflow: hidden; }
 .hero-slider, .hero-slide, .hero-overlay { position: absolute; inset: 0; }
 .hero-slide { background-position: center; background-size: cover; opacity: 0; transform: scale(1.04); transition: opacity 900ms ease, transform 7s ease; }
 .hero-slide.active { opacity: 1; transform: scale(1); }
