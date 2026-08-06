@@ -13,8 +13,8 @@ let tours = [];
 let slides = [];
 let gallery = [];
 let settings = {};
-let authToken = sessionStorage.getItem('hts_admin_token') || '';
-let isLoggedIn = sessionStorage.getItem('hts_admin_loggedin') === 'true' && Boolean(authToken);
+let authToken = localStorage.getItem('hts_admin_token') || '';
+let isLoggedIn = localStorage.getItem('hts_admin_loggedin') === 'true';
 
 // =============================================
 // HELPERS
@@ -27,8 +27,8 @@ async function api(url, opts = {}) {
     if (res.status === 401 && url !== '/api/login') {
         authToken = '';
         isLoggedIn = false;
-        sessionStorage.removeItem('hts_admin_token');
-        sessionStorage.removeItem('hts_admin_loggedin');
+        localStorage.removeItem('hts_admin_token');
+        localStorage.removeItem('hts_admin_loggedin');
         checkLogin();
     }
     if (!res.ok) throw new Error(data.error || 'Request failed');
@@ -67,10 +67,10 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const pass = document.getElementById('loginPassword').value;
     try {
         const result = await api('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pass }) });
-        authToken = result.token;
+        authToken = result.token || 'logged-in';
         isLoggedIn = true;
-        sessionStorage.setItem('hts_admin_token', authToken);
-        sessionStorage.setItem('hts_admin_loggedin', 'true');
+        localStorage.setItem('hts_admin_token', authToken);
+        localStorage.setItem('hts_admin_loggedin', 'true');
         checkLogin();
         await loadAll();
         refreshDashboard();
@@ -83,8 +83,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 document.getElementById('btnLogout').addEventListener('click', () => {
     authToken = '';
     isLoggedIn = false;
-    sessionStorage.removeItem('hts_admin_token');
-    sessionStorage.removeItem('hts_admin_loggedin');
+    localStorage.removeItem('hts_admin_token');
+    localStorage.removeItem('hts_admin_loggedin');
     checkLogin();
 });
 
