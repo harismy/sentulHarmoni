@@ -31,7 +31,7 @@
     --transition: .2s ease;
 }
 
-html { scroll-behavior: smooth; background: var(--cream); overflow-x: hidden; width: 100%; }
+html { scroll-behavior: smooth; background: var(--cream); overflow-x: hidden; }
 body {
     font-family: var(--font);
     background: var(--cream);
@@ -39,9 +39,6 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
-    max-width: 100vw;
-    width: 100%;
-    position: relative;
 }
 a { text-decoration: none; color: inherit; }
 button { cursor: pointer; font-family: inherit; border: none; }
