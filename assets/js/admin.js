@@ -275,27 +275,67 @@ function renderExistingImages() {
 }
 
 // --- Tag Lists ---
+function addIncludeItem(value) {
+    if (!value) return;
+    tempIncludes.push(value);
+    renderTagLists();
+}
+function addExcludeItem(value) {
+    if (!value) return;
+    tempExcludes.push(value);
+    renderTagLists();
+}
+
 function renderTagLists() {
     document.getElementById('includeList').innerHTML = tempIncludes.map((item, i) =>
-        `<span class="tag-item">${item}<button type="button" data-idx="${i}" data-type="include">&times;</button></span>`
+        `<div class="tag-list-item">
+            <span class="tag-text">${item}</span>
+            <button type="button" class="tag-remove" data-idx="${i}" data-type="include" title="Hapus"><i class="ri-close-line"></i></button>
+        </div>`
     ).join('');
     document.getElementById('excludeList').innerHTML = tempExcludes.map((item, i) =>
-        `<span class="tag-item exclude-tag-item">${item}<button type="button" data-idx="${i}" data-type="exclude">&times;</button></span>`
+        `<div class="tag-list-item exclude-item">
+            <span class="tag-text">${item}</span>
+            <button type="button" class="tag-remove" data-idx="${i}" data-type="exclude" title="Hapus"><i class="ri-close-line"></i></button>
+        </div>`
     ).join('');
 
-    document.querySelectorAll('#includeList button').forEach(btn => {
+    document.querySelectorAll('#includeList .tag-remove').forEach(btn => {
         btn.addEventListener('click', () => { tempIncludes.splice(parseInt(btn.dataset.idx), 1); renderTagLists(); });
     });
-    document.querySelectorAll('#excludeList button').forEach(btn => {
+    document.querySelectorAll('#excludeList .tag-remove').forEach(btn => {
         btn.addEventListener('click', () => { tempExcludes.splice(parseInt(btn.dataset.idx), 1); renderTagLists(); });
     });
 }
 
+// Include input: Enter key
 document.getElementById('includeInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); const v = e.target.value.trim(); if (v) { tempIncludes.push(v); e.target.value = ''; renderTagLists(); } }
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = e.target.value.trim();
+        if (v) { addIncludeItem(v); e.target.value = ''; }
+    }
 });
+// Include input: Add button
+document.getElementById('btnAddInclude').addEventListener('click', () => {
+    const input = document.getElementById('includeInput');
+    const v = input.value.trim();
+    if (v) { addIncludeItem(v); input.value = ''; input.focus(); }
+});
+
+// Exclude input: Enter key
 document.getElementById('excludeInput').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { e.preventDefault(); const v = e.target.value.trim(); if (v) { tempExcludes.push(v); e.target.value = ''; renderTagLists(); } }
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = e.target.value.trim();
+        if (v) { addExcludeItem(v); e.target.value = ''; }
+    }
+});
+// Exclude input: Add button
+document.getElementById('btnAddExclude').addEventListener('click', () => {
+    const input = document.getElementById('excludeInput');
+    const v = input.value.trim();
+    if (v) { addExcludeItem(v); input.value = ''; input.focus(); }
 });
 
 // --- Form Submit ---
@@ -384,11 +424,11 @@ function viewTourDetailModal(id) {
         ${t.description ? `<p style="font-size:.88rem;color:var(--text-dim);margin-bottom:16px;line-height:1.7;">${t.description}</p>` : ''}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div>
-                <h4 style="font-size:.9rem;margin-bottom:8px;color:#3a7248;">✅ Include</h4>
+                <h4 style="font-size:.9rem;margin-bottom:8px;color:#3a7248;">✅ Termasuk</h4>
                 <ul style="list-style:none;font-size:.82rem;">${(t.includes||[]).length ? t.includes.map(i => `<li style="padding:4px 0;">${i}</li>`).join('') : '<li style="color:var(--text-dim);">-</li>'}</ul>
             </div>
             <div>
-                <h4 style="font-size:.9rem;margin-bottom:8px;color:#dc4c4c;">❌ Exclude</h4>
+                <h4 style="font-size:.9rem;margin-bottom:8px;color:#dc4c4c;">❌ Mengecualikan</h4>
                 <ul style="list-style:none;font-size:.82rem;">${(t.excludes||[]).length ? t.excludes.map(i => `<li style="padding:4px 0;">${i}</li>`).join('') : '<li style="color:var(--text-dim);">-</li>'}</ul>
             </div>
         </div>

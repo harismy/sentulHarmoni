@@ -7,7 +7,6 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
-const crypto = require('crypto');
 const sharp = require('sharp');
 const initSqlJs = require('sql.js');
 
@@ -29,7 +28,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
-  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = /\.(jpg|jpeg|png|gif|webp|bmp|avif)$/i;
     if (!allowed.test(path.extname(file.originalname))) {
@@ -123,23 +122,12 @@ async function init() {
       category TEXT DEFAULT 'Wisata',
       description TEXT DEFAULT '',
       difficulty TEXT DEFAULT 'Sedang',
-      distance TEXT DEFAULT '3-5 km',
+      distance TEXT DEFAULT '',
       meeting_point TEXT DEFAULT 'Sentul, Bogor',
       itinerary TEXT DEFAULT '[]',
       preparations TEXT DEFAULT '[]'
     )
   `);
-
-  // Add newer detail fields without replacing an existing database.
-  const tourColumns = dbAll('PRAGMA table_info(tours)').map(column => column.name);
-  const ensureTourColumn = (name, definition) => {
-    if (!tourColumns.includes(name)) db.run(`ALTER TABLE tours ADD COLUMN ${name} ${definition}`);
-  };
-  ensureTourColumn('difficulty', "TEXT DEFAULT 'Sedang'");
-  ensureTourColumn('distance', "TEXT DEFAULT '3-5 km'");
-  ensureTourColumn('meeting_point', "TEXT DEFAULT 'Sentul, Bogor'");
-  ensureTourColumn('itinerary', "TEXT DEFAULT '[]'");
-  ensureTourColumn('preparations', "TEXT DEFAULT '[]'");
   db.run(`
     CREATE TABLE IF NOT EXISTS tour_images (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -185,15 +173,6 @@ async function init() {
       value TEXT
     )
   `);
-
-  const detailMigration = dbGet('SELECT value FROM settings WHERE key=?', ['tour_details_v1']);
-  if (!detailMigration) {
-    db.run("UPDATE tours SET difficulty='Mudah' WHERE category LIKE '%Ringan%'");
-    db.run("UPDATE tours SET difficulty='Menantang' WHERE category LIKE '%Hard%' OR name LIKE '%Offroad%'");
-    db.run("UPDATE tours SET distance='3 km' WHERE duration LIKE '1-2%'");
-    db.run("UPDATE tours SET distance='4-5 km' WHERE duration LIKE '2-3%'");
-    db.run("INSERT INTO settings (key, value) VALUES ('tour_details_v1', '1')");
-  }
   saveDb();
 
   // Seed default data
@@ -211,55 +190,79 @@ async function init() {
   ensureSetting('ig', 'harmonitrekkingsentul');
   ensureSetting('address', 'Kp. Cibingbin Rt 001/006, Desa Bojongkoneng, Kec. Babakanmadang, Kab. Bogor, Jawa Barat');
   ensureSetting('admin_password', 'admin123');
-  ensureSetting('session_secret', crypto.randomBytes(32).toString('hex'));
   saveDb();
 
   console.log('✅ Database ready');
 }
 
 function seedData() {
-  const includes = ['Guide Profesional', 'Air Mineral', 'Dokumentasi Foto', 'Tiket Masuk'];
-  const excludes = ['Transportasi ke Lokasi', 'Makan Siang', 'Asuransi Pribadi'];
-  const itinerary = JSON.stringify([
-    'Bertemu dengan guide dan briefing perjalanan',
-    'Trekking menyusuri jalur alam menuju destinasi',
-    'Istirahat, menikmati destinasi, dan dokumentasi',
-    'Kembali menuju titik pertemuan',
-  ]);
-  const preparations = JSON.stringify([
-    'Gunakan alas kaki trekking yang tidak licin',
-    'Bawa pakaian ganti dan perlindungan dari hujan',
-    'Pastikan kondisi tubuh sehat sebelum perjalanan',
-  ]);
+  // Standardized include/exclude lists
+  const REGULAR_INCLUDES = [
+    'Tiket masuk wisata',
+    'Tiket Parkir Kendaraan',
+    'Air mineral',
+    'Memandu',
+    'P3K',
+    'Foto Dokumentasi melalui smartphone',
+    'Tongkat pendakian (dipinjamkan)',
+    'Jalur Trekking',
+    'Jas Hujan (Apabila terjadi hujan)',
+  ];
+
+  const REGULAR_EXCLUDES = [
+    'Perlengkapan pribadi',
+    'Obat obatan pribadi',
+    'Transportasi dari Rumah masing-masing',
+    'Panduan Tips',
+  ];
+
+  const OFFROAD_INCLUDES = [
+    'Unit Offroad 4x4 Kapasitas 4 org',
+    'Durasi 2 sd 3 Jam',
+    'Driver',
+    'BBM',
+    'Air Mineral',
+    'Tiket Jalur Offroad',
+    'snack',
+  ];
+
+  const OFFROAD_EXCLUDES = [
+    'Makan Siang',
+    'Parkir Kendaraan Pribadi',
+  ];
+
   const tours = [
-    { name: 'Curug Leuwi Hejo - Curug Cepet', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Mudah', distance: '4-5 km',
-      description: 'Trekking menyusuri sungai dan hutan menuju kolam alami Curug Leuwi Hejo yang berair jernih.' },
-    { name: 'Goa Agung Garunggang', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4-5 km',
-      description: 'Eksplorasi formasi batu dan goa alami Goa Agung Garunggang bersama guide lokal.' },
-    { name: 'Curug Cibingbin - Curug Ngumpet', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4-5 km',
-      description: 'Trekking menuju Curug Cibingbin melalui aliran air, bebatuan, dan jalur hijau Sentul.' },
-    { name: 'Wisata Offroad Sentul Hambalang', duration: '2-3 jam', price: 1200000, category: 'Rute Hard', difficulty: 'Menantang', distance: 'Menyesuaikan',
-      description: 'Perjalanan jeep 4x4 melewati jalur tanah, sungai, dan perbukitan Hambalang.' },
-    { name: 'Curug Cibaliung', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4 km',
-      description: 'Trekking menuju Curug Cibaliung dengan kolam alami jernih, tebing batu, dan suasana hutan yang sejuk.' },
-    { name: 'Curug Hordeng', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4-5 km',
-      description: 'Jalur trekking hijau menuju Curug Hordeng dengan aliran air bertingkat di tengah hutan Sentul.' },
-    { name: 'Curug Leuwi Asih', duration: '1-2 jam', price: 150000, category: 'Rute Ringan', difficulty: 'Mudah', distance: '3 km',
-      description: 'Rute ramah keluarga menuju Leuwi Asih melalui area persawahan dan jalur desa.' },
-    { name: 'Curug Love', duration: '2-3 jam', price: 150000, category: 'Rute Standar', difficulty: 'Sedang', distance: '4 km',
-      description: 'Perjalanan melintasi sawah, rumpun bambu, dan jalur hutan menuju Curug Love.' },
+    { name:'Curug Leuwi Hejo — Curug Cepet', location:'Sentul', duration:'2-3 jam', price:150000, category:'Rute Standar',
+      description:'Trekking menyusuri curug terindah di Sentul. Melewati hutan tropis, sungai alami, dan pemandangan perbukitan yang memukau.',
+      includes: REGULAR_INCLUDES,
+      excludes: REGULAR_EXCLUDES },
+    { name:'Bukit Indah — Curug Bidadari', location:'Sentul', duration:'1-2 jam', price:150000, category:'Rute Ringan',
+      description:'Rute santai cocok untuk pemula dan keluarga. Melewati pemukiman warga, persawahan, perkebunan, bukit, dan sungai.',
+      includes: REGULAR_INCLUDES,
+      excludes: REGULAR_EXCLUDES },
+    { name:'Goa Agung Garunggang', location:'Sentul', duration:'2-3 jam', price:150000, category:'Rute Standar',
+      description:'Eksplorasi goa alam yang menakjubkan dengan stalaktit dan stalakmit alami.',
+      includes: REGULAR_INCLUDES,
+      excludes: REGULAR_EXCLUDES },
+    { name:'Curug Cibingbin — Curug Ngumpet', location:'Sentul', duration:'2-3 jam', price:150000, category:'Rute Standar',
+      description:'Jelajahi dua curug sekaligus dalam satu perjalanan.',
+      includes: REGULAR_INCLUDES,
+      excludes: REGULAR_EXCLUDES },
+    { name:'Wisata Offroad Sentul Hambalang', location:'Sentul', duration:'2-3 jam', price:1200000, category:'Rute Hard',
+      description:'Sensasi offroad menggunakan jeep 4x4 menyusuri jalur ekstrem Sentul.',
+      includes: OFFROAD_INCLUDES,
+      excludes: OFFROAD_EXCLUDES },
+    { name:'Trekking Sentul Corporate', location:'Sentul', duration:'1-2 jam', price:265000, category:'Rute Ringan',
+      description:'Program team building di alam terbuka. Cocok untuk acara kantor atau gathering.',
+      includes: REGULAR_INCLUDES,
+      excludes: REGULAR_EXCLUDES },
   ];
 
   for (const t of tours) {
-    const id = dbRun(
-      `INSERT INTO tours
-        (name, location, duration, price, category, description, difficulty, distance, meeting_point, itinerary, preparations)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-      [t.name, 'Sentul', t.duration, t.price, t.category, t.description, t.difficulty, t.distance,
-        'Sentul, Bogor', itinerary, preparations],
-    );
-    for (const item of includes) dbRun('INSERT INTO tour_includes (tour_id, item) VALUES (?,?)', [id, item]);
-    for (const item of excludes) dbRun('INSERT INTO tour_excludes (tour_id, item) VALUES (?,?)', [id, item]);
+    const id = dbRun('INSERT INTO tours (name, location, duration, price, category, description) VALUES (?,?,?,?,?,?)',
+      [t.name, t.location, t.duration, t.price, t.category, t.description]);
+    for (const item of t.includes) dbRun('INSERT INTO tour_includes (tour_id, item) VALUES (?,?)', [id, item]);
+    for (const item of t.excludes) dbRun('INSERT INTO tour_excludes (tour_id, item) VALUES (?,?)', [id, item]);
   }
   saveDb();
   console.log('✅ Default tours seeded');
@@ -267,20 +270,8 @@ function seedData() {
 
 // ---------- Middleware ----------
 app.use(express.json());
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use(express.static(__dirname));
 app.use('/uploads', express.static(UPLOADS_DIR));
-
-// Serve only the public pages. Never expose the project root because it also
-// contains the database, server source, and package metadata.
-app.get(['/', '/index.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-app.get('/admin.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
-});
-app.get('/destination.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'destination.html'));
-});
 
 // =============================================
 // API ROUTES
@@ -291,47 +282,11 @@ function enrichTour(t) {
   t.images = dbAll('SELECT filename FROM tour_images WHERE tour_id=? ORDER BY sort_order, id', [t.id]).map(r => r.filename);
   t.includes = dbAll('SELECT item FROM tour_includes WHERE tour_id=? ORDER BY id', [t.id]).map(r => r.item);
   t.excludes = dbAll('SELECT item FROM tour_excludes WHERE tour_id=? ORDER BY id', [t.id]).map(r => r.item);
-  try { t.itinerary = JSON.parse(t.itinerary || '[]'); } catch (e) { t.itinerary = []; }
-  try { t.preparations = JSON.parse(t.preparations || '[]'); } catch (e) { t.preparations = []; }
-  if (!Array.isArray(t.itinerary)) t.itinerary = [];
-  if (!Array.isArray(t.preparations)) t.preparations = [];
   t.image = t.images.length > 0 ? '/uploads/' + t.images[0] : '';
+  // Parse JSON fields
+  try { t.itinerary = JSON.parse(t.itinerary || '[]'); } catch(e) { t.itinerary = []; }
+  try { t.preparations = JSON.parse(t.preparations || '[]'); } catch(e) { t.preparations = []; }
   return t;
-}
-
-function adminTokenSecret() {
-  const secret = dbGet('SELECT value FROM settings WHERE key=?', ['session_secret'])?.value || 'harmoni-session';
-  const password = dbGet('SELECT value FROM settings WHERE key=?', ['admin_password'])?.value || 'admin123';
-  return `${secret}:${password}`;
-}
-
-function signAdminToken(expiresAt) {
-  return crypto.createHmac('sha256', adminTokenSecret()).update(String(expiresAt)).digest('base64url');
-}
-
-function createAdminToken() {
-  const expiresAt = Date.now() + (12 * 60 * 60 * 1000);
-  return `${expiresAt}.${signAdminToken(expiresAt)}`;
-}
-
-function verifyAdminToken(token) {
-  try {
-    const [expiresAt, signature] = String(token || '').split('.');
-    if (!expiresAt || !signature || Number(expiresAt) < Date.now()) return false;
-    const expected = signAdminToken(expiresAt);
-    const actualBuffer = Buffer.from(signature);
-    const expectedBuffer = Buffer.from(expected);
-    return actualBuffer.length === expectedBuffer.length && crypto.timingSafeEqual(actualBuffer, expectedBuffer);
-  } catch (error) {
-    return false;
-  }
-}
-
-function requireAdmin(req, res, next) {
-  const authorization = req.get('authorization') || '';
-  const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
-  if (!verifyAdminToken(token)) return res.status(401).json({ error: 'Sesi admin tidak valid atau sudah berakhir.' });
-  next();
 }
 
 app.get('/api/tours', (req, res) => {
@@ -345,21 +300,17 @@ app.get('/api/tours/:id', (req, res) => {
   res.json(enrichTour(t));
 });
 
-app.post('/api/tours', requireAdmin, upload.array('images', 10), async (req, res) => {
-  const { name, location, duration, price, category, description, difficulty, distance, meeting_point } = req.body;
+app.post('/api/tours', upload.array('images', 10), async (req, res) => {
+  const { name, location, duration, price, category, description, difficulty, distance, meeting_point, itinerary, preparations } = req.body;
   let includes = []; try { includes = JSON.parse(req.body.includes || '[]'); } catch(e){}
   let excludes = []; try { excludes = JSON.parse(req.body.excludes || '[]'); } catch(e){}
-  let itinerary = []; try { itinerary = JSON.parse(req.body.itinerary || '[]'); } catch(e){}
-  let preparations = []; try { preparations = JSON.parse(req.body.preparations || '[]'); } catch(e){}
 
   // Convert uploaded images to WebP
   await convertFilesToWebp(req.files);
 
   const id = dbRun(
-    `INSERT INTO tours
-      (name, location, duration, price, category, description, difficulty, distance, meeting_point, itinerary, preparations)
-      VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-    [name, location, duration, parseInt(price)||0, category||'Wisata', description||'', difficulty||'Sedang', distance||'3-5 km', meeting_point||'Sentul, Bogor', JSON.stringify(itinerary), JSON.stringify(preparations)]
+    'INSERT INTO tours (name, location, duration, price, category, description, difficulty, distance, meeting_point, itinerary, preparations) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+    [name||'', location||'Sentul', duration||'2-3 jam', parseInt(price)||0, category||'Wisata', description||'', difficulty||'Sedang', distance||'', meeting_point||'Sentul, Bogor', itinerary||'[]', preparations||'[]']
   );
 
   if (req.files) {
@@ -372,24 +323,34 @@ app.post('/api/tours', requireAdmin, upload.array('images', 10), async (req, res
   res.json({ success: true, id });
 });
 
-app.put('/api/tours/:id', requireAdmin, upload.array('images', 10), async (req, res) => {
+app.put('/api/tours/:id', upload.array('images', 10), async (req, res) => {
   const tourId = parseInt(req.params.id);
   const existing = dbGet('SELECT * FROM tours WHERE id=?', [tourId]);
   if (!existing) return res.status(404).json({ error: 'Not found' });
 
-  const { name, location, duration, price, category, description, difficulty, distance, meeting_point } = req.body;
+  const { name, location, duration, price, category, description, difficulty, distance, meeting_point, itinerary, preparations } = req.body;
   let includes = []; try { includes = JSON.parse(req.body.includes || '[]'); } catch(e){}
   let excludes = []; try { excludes = JSON.parse(req.body.excludes || '[]'); } catch(e){}
-  let itinerary = []; try { itinerary = JSON.parse(req.body.itinerary || '[]'); } catch(e){}
-  let preparations = []; try { preparations = JSON.parse(req.body.preparations || '[]'); } catch(e){}
 
   // Convert new uploaded images to WebP
   await convertFilesToWebp(req.files);
 
-  db.run(`UPDATE tours SET
-      name=?, location=?, duration=?, price=?, category=?, description=?, difficulty=?, distance=?, meeting_point=?, itinerary=?, preparations=?
-      WHERE id=?`,
-    [name, location, duration, parseInt(price)||0, category||'Wisata', description||'', difficulty||'Sedang', distance||'3-5 km', meeting_point||'Sentul, Bogor', JSON.stringify(itinerary), JSON.stringify(preparations), tourId]);
+  // Use existing values as fallback for fields not sent in request
+  db.run('UPDATE tours SET name=?, location=?, duration=?, price=?, category=?, description=?, difficulty=?, distance=?, meeting_point=?, itinerary=?, preparations=? WHERE id=?',
+    [
+      name ?? existing.name,
+      location ?? existing.location,
+      duration ?? existing.duration,
+      parseInt(price) || existing.price || 0,
+      category ?? existing.category,
+      description ?? existing.description,
+      difficulty ?? existing.difficulty,
+      distance ?? existing.distance,
+      meeting_point ?? existing.meeting_point,
+      itinerary ?? existing.itinerary,
+      preparations ?? existing.preparations,
+      tourId
+    ]);
 
   // Remove deleted images
   if (req.body.removeImages) {
@@ -418,7 +379,7 @@ app.put('/api/tours/:id', requireAdmin, upload.array('images', 10), async (req, 
   res.json({ success: true });
 });
 
-app.delete('/api/tours/:id', requireAdmin, (req, res) => {
+app.delete('/api/tours/:id', (req, res) => {
   const tourId = parseInt(req.params.id);
   const images = dbAll('SELECT filename FROM tour_images WHERE tour_id=?', [tourId]);
   for (const img of images) {
@@ -436,7 +397,7 @@ app.get('/api/slides', (req, res) => {
   res.json(slides.map(s => ({ ...s, image: s.filename ? '/uploads/' + s.filename : '' })));
 });
 
-app.post('/api/slides', requireAdmin, upload.single('image'), async (req, res) => {
+app.post('/api/slides', upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Pilih gambar untuk slide.' });
 
   let filename = '';
@@ -449,7 +410,7 @@ app.post('/api/slides', requireAdmin, upload.single('image'), async (req, res) =
   res.json({ success: true, id });
 });
 
-app.put('/api/slides/:id', requireAdmin, upload.single('image'), async (req, res) => {
+app.put('/api/slides/:id', upload.single('image'), async (req, res) => {
   const id = parseInt(req.params.id);
   const existing = dbGet('SELECT * FROM slides WHERE id=?', [id]);
   if (!existing) return res.status(404).json({ error: 'Not found' });
@@ -468,7 +429,7 @@ app.put('/api/slides/:id', requireAdmin, upload.single('image'), async (req, res
   res.json({ success: true });
 });
 
-app.delete('/api/slides/:id', requireAdmin, (req, res) => {
+app.delete('/api/slides/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const existing = dbGet('SELECT * FROM slides WHERE id=?', [id]);
   if (existing && existing.filename) {
@@ -486,7 +447,7 @@ app.get('/api/gallery', (req, res) => {
   res.json(items.map(g => ({ ...g, image: g.filename ? '/uploads/' + g.filename : '' })));
 });
 
-app.post('/api/gallery', requireAdmin, upload.single('image'), async (req, res) => {
+app.post('/api/gallery', upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Pilih gambar untuk galeri.' });
 
   let filename = '';
@@ -499,7 +460,7 @@ app.post('/api/gallery', requireAdmin, upload.single('image'), async (req, res) 
   res.json({ success: true, id });
 });
 
-app.delete('/api/gallery/:id', requireAdmin, (req, res) => {
+app.delete('/api/gallery/:id', (req, res) => {
   const id = parseInt(req.params.id);
   const existing = dbGet('SELECT * FROM gallery WHERE id=?', [id]);
   if (existing && existing.filename) {
@@ -513,18 +474,18 @@ app.delete('/api/gallery/:id', requireAdmin, (req, res) => {
 
 // --- SETTINGS ---
 app.get('/api/settings', (req, res) => {
-  const rows = dbAll("SELECT * FROM settings WHERE key NOT IN ('admin_password', 'session_secret', 'tour_details_v1')");
+  const rows = dbAll('SELECT * FROM settings');
   const settings = {};
   for (const r of rows) settings[r.key] = r.value;
   res.json(settings);
 });
 
-app.put('/api/settings', requireAdmin, (req, res) => {
+app.put('/api/settings', (req, res) => {
   for (const [key, value] of Object.entries(req.body)) {
     db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?,?)', [key, String(value)]);
   }
   saveDb();
-  res.json({ success: true, token: req.body.admin_password ? createAdminToken() : undefined });
+  res.json({ success: true });
 });
 
 // --- AUTH ---
@@ -533,14 +494,10 @@ app.post('/api/login', (req, res) => {
   const row = dbGet('SELECT value FROM settings WHERE key=?', ['admin_password']);
   const correctPass = row ? row.value : 'admin123';
   if (password === correctPass) {
-    res.json({ success: true, token: createAdminToken() });
+    res.json({ success: true });
   } else {
     res.status(401).json({ error: 'Password salah' });
   }
-});
-
-app.get('/api/admin/session', requireAdmin, (req, res) => {
-  res.json({ success: true });
 });
 
 // --- UPLOAD ERRORS ---
@@ -554,27 +511,15 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// --- SPA Fallback ---
+// --- Destination Detail Page ---
 app.get('/destinasi/:id', (req, res) => {
   res.sendFile(path.join(__dirname, 'destination.html'));
 });
 
+// --- SPA Fallback ---
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/')) return res.status(404).json({ error: 'Not found' });
-  if (path.extname(req.path)) return res.status(404).send('Not found');
   res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// --- Error Handler (Multer, dll) ---
-app.use((err, req, res, next) => {
-  if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(413).json({ error: 'File terlalu besar. Maksimal 20MB.' });
-  }
-  if (err.message && err.message.includes('Format file')) {
-    return res.status(400).json({ error: err.message });
-  }
-  console.error('Server error:', err);
-  res.status(500).json({ error: 'Terjadi kesalahan server.' });
 });
 
 // ---------- Start ----------

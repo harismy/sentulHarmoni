@@ -147,12 +147,14 @@
                     <div class="card">
                         <div class="card-header"><h3>Destinasi Terbaru</h3></div>
                         <div class="card-body">
+                            <div class="table-wrap">
                             <table class="table">
                                 <thead>
                                     <tr><th>Destinasi</th><th>Kategori</th><th>Durasi</th><th>Harga</th><th>Aksi</th></tr>
                                 </thead>
                                 <tbody id="dashboardTourTable"></tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -165,12 +167,14 @@
                     <div class="card">
                         <div class="card-header"><h3>Daftar Destinasi</h3></div>
                         <div class="card-body">
+                            <div class="table-wrap">
                             <table class="table">
                                 <thead>
                                     <tr><th>Gambar</th><th>Nama</th><th>Kategori</th><th>Lokasi</th><th>Durasi</th><th>Harga</th><th>Aksi</th></tr>
                                 </thead>
                                 <tbody id="toursTableBody"></tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -183,10 +187,12 @@
                     <div class="card">
                         <div class="card-header"><h3>Daftar Slide Hero</h3></div>
                         <div class="card-body">
+                            <div class="table-wrap">
                             <table class="table">
                                 <thead><tr><th>Gambar</th><th>Judul</th><th>Aksi</th></tr></thead>
                                 <tbody id="sliderTableBody"></tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -199,10 +205,12 @@
                     <div class="card">
                         <div class="card-header"><h3>Daftar Galeri</h3></div>
                         <div class="card-body">
+                            <div class="table-wrap">
                             <table class="table">
                                 <thead><tr><th>Gambar</th><th>Caption</th><th>Aksi</th></tr></thead>
                                 <tbody id="galleryTableBody"></tbody>
                             </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -318,20 +326,20 @@
                     <!-- Include & Exclude -->
                     <div class="form-row">
                         <div class="form-group flex-1">
-                            <label><i class="ri-check-line" style="color:#3a7248;"></i> Include (yang sudah termasuk)</label>
-                            <div class="tag-input" id="includeTags">
-                                <div class="tag-list" id="includeList"></div>
-                                <input type="text" id="includeInput" placeholder="Tambah item include..." class="tag-add-input">
+                            <label><i class="ri-check-line" style="color:#3a7248;"></i> Termasuk (sudah termasuk dalam paket)</label>
+                            <div class="tag-list-block" id="includeList"></div>
+                            <div class="tag-input-row">
+                                <input type="text" id="includeInput" placeholder="Tambah item..." class="tag-add-input">
+                                <button type="button" class="btn btn-sm btn-tag-add" id="btnAddInclude"><i class="ri-add-line"></i> Tambah</button>
                             </div>
-                            <small>Contoh: Guide Profesional, Air Mineral, Dokumentasi Foto</small>
                         </div>
                         <div class="form-group flex-1">
-                            <label><i class="ri-close-line" style="color:#dc4c4c;"></i> Exclude (yang tidak termasuk)</label>
-                            <div class="tag-input" id="excludeTags">
-                                <div class="tag-list" id="excludeList"></div>
-                                <input type="text" id="excludeInput" placeholder="Tambah item exclude..." class="tag-add-input">
+                            <label><i class="ri-close-line" style="color:#dc4c4c;"></i> Mengecualikan (tidak termasuk dalam paket)</label>
+                            <div class="tag-list-block" id="excludeList"></div>
+                            <div class="tag-input-row">
+                                <input type="text" id="excludeInput" placeholder="Tambah item..." class="tag-add-input">
+                                <button type="button" class="btn btn-sm btn-tag-add btn-tag-add-exclude" id="btnAddExclude"><i class="ri-add-line"></i> Tambah</button>
                             </div>
-                            <small>Contoh: Transportasi ke lokasi, Asuransi, Makan siang</small>
                         </div>
                     </div>
 

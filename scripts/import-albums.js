@@ -9,16 +9,37 @@ const UPLOADS_DIR = path.join(ROOT, 'uploads');
 const DB_PATH = path.join(ROOT, 'harmoni.db');
 
 const DEFAULT_INCLUDES = [
-  'Guide Profesional',
-  'Air Mineral',
-  'Dokumentasi Foto',
-  'Tiket Masuk',
+  'Tiket masuk wisata',
+  'Tiket Parkir Kendaraan',
+  'Air mineral',
+  'Memandu',
+  'P3K',
+  'Foto Dokumentasi melalui smartphone',
+  'Tongkat pendakian (dipinjamkan)',
+  'Jalur Trekking',
+  'Jas Hujan (Apabila terjadi hujan)',
 ];
 
 const DEFAULT_EXCLUDES = [
-  'Transportasi ke Lokasi',
+  'Perlengkapan pribadi',
+  'Obat obatan pribadi',
+  'Transportasi dari Rumah masing-masing',
+  'Panduan Tips',
+];
+
+const OFFROAD_INCLUDES = [
+  'Unit Offroad 4x4 Kapasitas 4 org',
+  'Durasi 2 sd 3 Jam',
+  'Driver',
+  'BBM',
+  'Air Mineral',
+  'Tiket Jalur Offroad',
+  'snack',
+];
+
+const OFFROAD_EXCLUDES = [
   'Makan Siang',
-  'Asuransi Pribadi',
+  'Parkir Kendaraan Pribadi',
 ];
 
 const ALBUMS = [
@@ -128,6 +149,9 @@ function findTour(db, album) {
 
 function createTour(db, album) {
   const details = album.create;
+  const isOffroad = album.slug === 'offroad-hambalang';
+  const includes = isOffroad ? OFFROAD_INCLUDES : DEFAULT_INCLUDES;
+  const excludes = isOffroad ? OFFROAD_EXCLUDES : DEFAULT_EXCLUDES;
   const itinerary = JSON.stringify([
     'Bertemu dengan guide dan briefing perjalanan',
     'Trekking menyusuri jalur alam menuju destinasi',
@@ -148,8 +172,8 @@ function createTour(db, album) {
       details.difficulty, details.distance, 'Sentul, Bogor', itinerary, preparations],
   );
   const tourId = lastInsertId(db);
-  DEFAULT_INCLUDES.forEach(item => db.run('INSERT INTO tour_includes (tour_id, item) VALUES (?,?)', [tourId, item]));
-  DEFAULT_EXCLUDES.forEach(item => db.run('INSERT INTO tour_excludes (tour_id, item) VALUES (?,?)', [tourId, item]));
+  includes.forEach(item => db.run('INSERT INTO tour_includes (tour_id, item) VALUES (?,?)', [tourId, item]));
+  excludes.forEach(item => db.run('INSERT INTO tour_excludes (tour_id, item) VALUES (?,?)', [tourId, item]));
   return row(db, 'SELECT * FROM tours WHERE id=?', [tourId]);
 }
 
@@ -258,11 +282,22 @@ async function main() {
     db.run('BEGIN');
     removeDummyTours(db);
     for (const album of ALBUMS) {
+      const isOffroad = album.slug === 'offroad-hambalang';
+      const includes = isOffroad ? OFFROAD_INCLUDES : DEFAULT_INCLUDES;
+      const excludes = isOffroad ? OFFROAD_EXCLUDES : DEFAULT_EXCLUDES;
+
       let tour = findTour(db, album);
       if (!tour) {
         if (!album.create) throw new Error(`Destination not found for album: ${album.folder}`);
         tour = createTour(db, album);
         console.log(`Created destination: ${tour.name}`);
+      } else {
+        // Update includes/excludes for existing tours
+        db.run('DELETE FROM tour_includes WHERE tour_id=?', [tour.id]);
+        db.run('DELETE FROM tour_excludes WHERE tour_id=?', [tour.id]);
+        includes.forEach(item => db.run('INSERT INTO tour_includes (tour_id, item) VALUES (?,?)', [tour.id, item]));
+        excludes.forEach(item => db.run('INSERT INTO tour_excludes (tour_id, item) VALUES (?,?)', [tour.id, item]));
+        console.log(`Updated includes/excludes: ${tour.name}`);
       }
       const count = await replaceTourImages(db, album, tour.id);
       console.log(`Imported ${count} photos: ${tour.name}`);
