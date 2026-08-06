@@ -31,7 +31,7 @@
     --transition: .2s ease;
 }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; background: var(--cream); }
 body {
     font-family: var(--font);
     background: var(--cream);
@@ -110,7 +110,7 @@ img { max-width: 100%; display: block; }
 .login-hint code { background: var(--green-100); padding: 2px 8px; border-radius: 4px; color: var(--green-500); font-size: .82rem; }
 
 /* ===== ADMIN LAYOUT ===== */
-.admin-layout { display: flex; min-height: 100vh; }
+.admin-layout { display: flex; min-height: 100vh; min-height: 100dvh; }
 
 /* Sidebar */
 .admin-sidebar {
@@ -481,10 +481,7 @@ input[type="file"] {
 }
 
 /* Fix horizontal scroll on all breakpoints */
-*, *::before, *::after {
-    max-width: 100%;
-}
-img, video, canvas, svg, iframe, embed, object {
+img, video, canvas, svg, iframe, embed, object, table {
     max-width: 100%;
     height: auto;
 }

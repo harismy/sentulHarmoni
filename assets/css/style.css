@@ -23,12 +23,14 @@
     --transition: 260ms cubic-bezier(.2, .7, .2, 1);
 }
 
-html { scroll-behavior: smooth; scroll-padding-top: 82px; }
+html { scroll-behavior: smooth; scroll-padding-top: 82px; background: var(--surface-soft); }
 body {
     background: var(--surface-soft);
     color: var(--ink);
     font-family: var(--font-body);
     line-height: 1.65;
+    min-height: 100vh;
+    min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
 }
