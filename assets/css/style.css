@@ -23,7 +23,13 @@
     --transition: 260ms cubic-bezier(.2, .7, .2, 1);
 }
 
-html { scroll-behavior: smooth; scroll-padding-top: 82px; background: var(--forest-950); }
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 82px;
+    background: var(--forest-950);
+    overflow-x: hidden;
+    width: 100%;
+}
 body {
     background: var(--surface-soft);
     color: var(--ink);
@@ -33,6 +39,8 @@ body {
     min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    width: 100%;
+    position: relative;
 }
 body.menu-open { overflow: hidden; }
 [hidden] { display: none !important; }
@@ -146,7 +154,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 /* Hero */
 .hero { position: relative; width: 100%; min-height: 690px; height: 92svh; max-height: 900px; display: flex; color: var(--white); background: var(--forest-950); overflow: hidden; }
 .hero-slider, .hero-slide, .hero-overlay { position: absolute; inset: 0; }
-.hero-slide { background-position: center; background-size: cover; opacity: 0; transform: scale(1.04); transition: opacity 900ms ease, transform 7s ease; }
+.hero-slide { background-position: center; background-size: cover; opacity: 0; transform: scale(1); transition: opacity 900ms ease, transform 7s ease; }
 .hero-slide.active { opacity: 1; transform: scale(1); }
 .hero-overlay { background: linear-gradient(90deg, rgba(8, 25, 16, .78) 0%, rgba(8, 25, 16, .48) 50%, rgba(8, 25, 16, .2) 100%), linear-gradient(0deg, rgba(8, 24, 15, .72) 0%, transparent 42%); }
 .hero-layout { position: relative; z-index: 2; display: flex; flex-direction: column; justify-content: center; padding-top: 82px; }
