@@ -67,7 +67,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const pass = document.getElementById('loginPassword').value;
     try {
         const result = await api('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pass }) });
-        authToken = result.token || 'logged-in';
+        authToken = result.token;
+        if (!authToken) throw new Error('Token login tidak diterima dari server.');
         isLoggedIn = true;
         localStorage.setItem('hts_admin_token', authToken);
         localStorage.setItem('hts_admin_loggedin', 'true');
@@ -185,6 +186,55 @@ function renderDashboardHeroBackground() {
     document.getElementById('dashboardHeroCount').textContent = slides.length ? `${slides.length} slide aktif` : 'Default bawaan';
     document.getElementById('dashboardHeroTitle').textContent = activeSlide?.title || (activeSlide ? 'Slide tanpa judul' : 'Belum ada slide admin');
 }
+
+// =============================================
+// BACKUP RESTORE
+// =============================================
+const restoreBackupForm = document.getElementById('restoreBackupForm');
+restoreBackupForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const fileInput = document.getElementById('backupFileInput');
+    const passwordInput = document.getElementById('backupAdminPassword');
+    const button = document.getElementById('btnRestoreBackup');
+    const status = document.getElementById('backupStatus');
+    const file = fileInput.files[0];
+    const password = passwordInput.value;
+
+    if (!file) {
+        toast('Pilih file backup terlebih dahulu.', true);
+        return;
+    }
+
+    if (!confirm('Restore backup akan mengganti database dan semua foto upload saat ini. Lanjutkan?')) return;
+
+    const formData = new FormData();
+    formData.append('backup', file);
+
+    button.disabled = true;
+    button.innerHTML = '<i class="ri-loader-4-line"></i> Memproses...';
+    status.textContent = 'Mengupload dan merestore backup...';
+
+    try {
+        const result = await api('/api/backups/restore', {
+            method: 'POST',
+            headers: { 'X-Admin-Password': password },
+            body: formData,
+        });
+
+        await refreshAll();
+        fileInput.value = '';
+        passwordInput.value = '';
+        status.textContent = `Restore berhasil: ${result.rows?.tours || 0} destinasi, ${result.uploads?.files || 0} file upload`;
+        toast('Backup berhasil direstore.');
+    } catch (err) {
+        status.textContent = 'Restore gagal.';
+        toast('Gagal restore: ' + err.message, true);
+    } finally {
+        button.disabled = false;
+        button.innerHTML = '<i class="ri-upload-cloud-2-line"></i> Upload & Restore';
+    }
+});
 
 // =============================================
 // TOURS TABLE
@@ -611,7 +661,7 @@ document.getElementById('settingsForm').addEventListener('submit', async (e) => 
     const result = await api('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
     if (result.token) {
         authToken = result.token;
-        sessionStorage.setItem('hts_admin_token', authToken);
+        localStorage.setItem('hts_admin_token', authToken);
     }
     settings = { ...settings, ...data };
     toast('Pengaturan disimpan! ⚙️');

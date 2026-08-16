@@ -1,9 +1,13 @@
 const http = require('http');
 const BASE = 'http://localhost:3000';
+let adminToken = '';
 
 function req(method, path, body, contentType) {
   return new Promise((resolve, reject) => {
     const opts = { method, headers: {} };
+    if (adminToken && path !== '/api/login') {
+      opts.headers.Authorization = 'Bearer ' + adminToken;
+    }
     if (body) {
       opts.headers['Content-Type'] = contentType || 'application/json';
       opts.headers['Content-Length'] = Buffer.byteLength(body);
@@ -47,10 +51,10 @@ async function run() {
   let pass = 0, fail = 0;
   const results = [];
 
-  async function test(name, fn) {
+  async function test(name, fn, expectedStatus = status => status >= 200 && status < 300) {
     try {
       const r = await fn();
-      const ok = r.status >= 200 && r.status < 300;
+      const ok = expectedStatus(r.status);
       const detail = typeof r.body === 'string' ? r.body.substring(0, 100) : JSON.stringify(r.body).substring(0, 100);
       results.push({ name, ok, status: r.status, detail });
       if (ok) pass++; else fail++;
@@ -62,11 +66,20 @@ async function run() {
     }
   }
 
+  // ===== AUTH SETUP =====
+  console.log('\n--- AUTH SETUP ---');
+  await test('POST /api/login (setup)', async () => {
+    const r = await req('POST', '/api/login', JSON.stringify({ password: 'admin123' }));
+    if (r.body && r.body.token) adminToken = r.body.token;
+    return r;
+  });
+  if (!adminToken) throw new Error('Admin token not received. Check admin password before running route tests.');
+
   // ===== TOURS =====
   console.log('\n--- TOURS ---');
   await test('GET /api/tours', () => req('GET', '/api/tours'));
   await test('GET /api/tours/1', () => req('GET', '/api/tours/1'));
-  await test('GET /api/tours/999 (404)', () => req('GET', '/api/tours/999'));
+  await test('GET /api/tours/999 (404)', () => req('GET', '/api/tours/999'), status => status === 404);
 
   // Create a test tour
   const boundary = '----TestBoundary' + Date.now();
@@ -132,7 +145,7 @@ async function run() {
     await test('DELETE /api/tours/' + createdId, () => req('DELETE', '/api/tours/' + createdId));
 
     // Verify delete
-    await test('GET /api/tours/' + createdId + ' (verify delete)', () => req('GET', '/api/tours/' + createdId));
+    await test('GET /api/tours/' + createdId + ' (verify delete)', () => req('GET', '/api/tours/' + createdId), status => status === 404);
   }
 
   // ===== SLIDES =====
@@ -150,8 +163,12 @@ async function run() {
 
   // ===== AUTH =====
   console.log('\n--- AUTH ---');
-  await test('POST /api/login (wrong)', () => req('POST', '/api/login', JSON.stringify({ password: 'wrong' })));
-  await test('POST /api/login (correct)', () => req('POST', '/api/login', JSON.stringify({ password: 'admin123' })));
+  await test('POST /api/login (wrong)', () => req('POST', '/api/login', JSON.stringify({ password: 'wrong' })), status => status === 401);
+  await test('POST /api/login (correct)', async () => {
+    const r = await req('POST', '/api/login', JSON.stringify({ password: 'admin123' }));
+    if (r.body && r.body.token) adminToken = r.body.token;
+    return r;
+  });
 
   // ===== PAGES =====
   console.log('\n--- PAGES ---');

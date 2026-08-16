@@ -7,6 +7,8 @@ const express = require('express');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+const zlib = require('zlib');
+const crypto = require('crypto');
 const sharp = require('sharp');
 const initSqlJs = require('sql.js');
 
@@ -14,6 +16,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, 'harmoni.db');
 const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const BACKUPS_DIR = path.join(__dirname, 'backups');
+const RESTORE_TMP_DIR = path.join(__dirname, '.tmp', 'restore');
 
 // ---------- Uploads Dir ----------
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
@@ -33,6 +37,28 @@ const upload = multer({
     const allowed = /\.(jpg|jpeg|png|gif|webp|bmp|avif)$/i;
     if (!allowed.test(path.extname(file.originalname))) {
       return cb(new Error('Format file tidak didukung. Gunakan JPG, PNG, WebP, GIF, BMP, atau AVIF.'));
+    }
+    cb(null, true);
+  },
+});
+
+const restoreStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    fs.mkdirSync(RESTORE_TMP_DIR, { recursive: true });
+    cb(null, RESTORE_TMP_DIR);
+  },
+  filename: (req, file, cb) => {
+    cb(null, 'restore-' + Date.now() + '-' + Math.round(Math.random() * 1e6) + path.extname(file.originalname).toLowerCase());
+  },
+});
+
+const restoreUpload = multer({
+  storage: restoreStorage,
+  limits: { fileSize: 500 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const name = file.originalname.toLowerCase();
+    if (!name.endsWith('.tar.gz') && !name.endsWith('.tgz')) {
+      return cb(new Error('File backup harus berformat .tar.gz atau .tgz.'));
     }
     cb(null, true);
   },
@@ -69,7 +95,10 @@ async function convertFilesToWebp(files) {
 }
 
 // ---------- Database ----------
+let SQL;
 let db;
+const adminSessions = new Map();
+const ADMIN_SESSION_TTL_MS = 12 * 60 * 60 * 1000;
 
 function saveDb() {
   try { fs.writeFileSync(DB_PATH, Buffer.from(db.export())); } catch(e) { console.error('Save DB error:', e.message); }
@@ -106,9 +135,322 @@ function dbGet(sql, params = []) {
   return rows[0] || null;
 }
 
+function queryRows(database, sql, params = []) {
+  const stmt = database.prepare(sql);
+  if (params.length) stmt.bind(params);
+  const rows = [];
+  while (stmt.step()) rows.push(stmt.getAsObject());
+  stmt.free();
+  return rows;
+}
+
+function pad(value) {
+  return String(value).padStart(2, '0');
+}
+
+function timestamp(date = new Date()) {
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join('') + '-' + [
+    pad(date.getHours()),
+    pad(date.getMinutes()),
+    pad(date.getSeconds()),
+  ].join('');
+}
+
+function userError(message, statusCode = 400) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
+function getAdminPassword() {
+  const row = dbGet('SELECT value FROM settings WHERE key=?', ['admin_password']);
+  return row ? row.value : 'admin123';
+}
+
+function createAdminToken() {
+  const token = crypto.randomBytes(32).toString('hex');
+  adminSessions.set(token, Date.now() + ADMIN_SESSION_TTL_MS);
+  return token;
+}
+
+function getBearerToken(req) {
+  const header = req.get('authorization') || '';
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1] : '';
+}
+
+function isValidAdminToken(token) {
+  const expiresAt = adminSessions.get(token);
+  if (!expiresAt) return false;
+  if (expiresAt <= Date.now()) {
+    adminSessions.delete(token);
+    return false;
+  }
+  adminSessions.set(token, Date.now() + ADMIN_SESSION_TTL_MS);
+  return true;
+}
+
+function requireAdmin(req, res, next) {
+  if (!isValidAdminToken(getBearerToken(req))) {
+    return res.status(401).json({ error: 'Sesi admin berakhir. Silakan login ulang.' });
+  }
+  next();
+}
+
+function requireAdminPassword(req, res, next) {
+  const password = req.get('x-admin-password') || '';
+  if (!password || password !== getAdminPassword()) {
+    return res.status(401).json({ error: 'Password admin salah.' });
+  }
+  next();
+}
+
+function copyDirectory(source, destination) {
+  if (!fs.existsSync(source)) return { files: 0, bytes: 0 };
+
+  fs.mkdirSync(destination, { recursive: true });
+  let files = 0;
+  let bytes = 0;
+
+  for (const entry of fs.readdirSync(source, { withFileTypes: true })) {
+    const sourcePath = path.join(source, entry.name);
+    const destinationPath = path.join(destination, entry.name);
+
+    if (entry.isDirectory()) {
+      const nested = copyDirectory(sourcePath, destinationPath);
+      files += nested.files;
+      bytes += nested.bytes;
+      continue;
+    }
+
+    if (!entry.isFile()) continue;
+
+    const stat = fs.statSync(sourcePath);
+    fs.copyFileSync(sourcePath, destinationPath);
+    files += 1;
+    bytes += stat.size;
+  }
+
+  return { files, bytes };
+}
+
+function assertProjectChild(targetPath, expectedName) {
+  const resolved = path.resolve(targetPath);
+  const root = path.resolve(__dirname);
+  if (path.basename(resolved) !== expectedName || path.dirname(resolved) !== root) {
+    throw new Error(`Unsafe project path: ${resolved}`);
+  }
+}
+
+function parseTarString(buffer, start, length) {
+  const slice = buffer.subarray(start, start + length);
+  const zero = slice.indexOf(0);
+  return slice.subarray(0, zero >= 0 ? zero : slice.length).toString('utf8').trim();
+}
+
+function parseTarSize(buffer) {
+  const raw = parseTarString(buffer, 124, 12).replace(/\0/g, '').trim();
+  if (!raw) return 0;
+  const size = parseInt(raw, 8);
+  if (!Number.isFinite(size) || size < 0) throw userError('Ukuran file backup tidak valid.');
+  return size;
+}
+
+function safeArchiveName(entryName) {
+  let normalized = entryName.replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/+$/, '');
+  if (!normalized || normalized === '.') return '';
+  if (normalized.startsWith('/') || /^[a-zA-Z]:/.test(normalized)) {
+    throw userError('Isi backup memiliki path absolut yang tidak aman.');
+  }
+  const parts = normalized.split('/');
+  if (parts.some(part => !part || part === '.' || part === '..')) {
+    throw userError('Isi backup memiliki path tidak aman.');
+  }
+  return parts.join('/');
+}
+
+function writeArchiveEntry(destination, entryName, type, data) {
+  const safeName = safeArchiveName(entryName);
+  if (!safeName) return;
+
+  const targetPath = path.resolve(destination, safeName);
+  const root = path.resolve(destination);
+  if (targetPath !== root && !targetPath.startsWith(root + path.sep)) {
+    throw userError('Isi backup mencoba menulis keluar folder restore.');
+  }
+
+  if (type === '5') {
+    fs.mkdirSync(targetPath, { recursive: true });
+    return;
+  }
+
+  if (type !== '0' && type !== '') {
+    if (type === 'x' || type === 'g' || type === 'L') return;
+    throw userError('Isi backup memiliki tipe file yang tidak didukung.');
+  }
+
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  fs.writeFileSync(targetPath, data);
+}
+
+function extractTarGz(archivePath, destination) {
+  const tarBuffer = zlib.gunzipSync(fs.readFileSync(archivePath));
+  let offset = 0;
+  let files = 0;
+
+  while (offset + 512 <= tarBuffer.length) {
+    const header = tarBuffer.subarray(offset, offset + 512);
+    if (header.every(byte => byte === 0)) break;
+
+    const name = parseTarString(header, 0, 100);
+    const prefix = parseTarString(header, 345, 155);
+    const entryName = prefix ? `${prefix}/${name}` : name;
+    const size = parseTarSize(header);
+    const type = parseTarString(header, 156, 1);
+    const dataStart = offset + 512;
+    const dataEnd = dataStart + size;
+
+    if (dataEnd > tarBuffer.length) throw userError('File backup tidak lengkap atau rusak.');
+    writeArchiveEntry(destination, entryName, type, tarBuffer.subarray(dataStart, dataEnd));
+    if (type === '0' || type === '') files += 1;
+
+    offset = dataStart + Math.ceil(size / 512) * 512;
+  }
+
+  if (!files) throw userError('File backup tidak berisi data yang bisa direstore.');
+  return files;
+}
+
+function findRestoreRoot(extractedDir) {
+  const candidates = [];
+
+  function walk(current, depth = 0) {
+    if (depth > 5) return;
+    if (fs.existsSync(path.join(current, 'harmoni.db'))) candidates.push(current);
+
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      if (entry.isDirectory()) walk(path.join(current, entry.name), depth + 1);
+    }
+  }
+
+  walk(extractedDir);
+  if (!candidates.length) throw userError('Backup tidak berisi harmoni.db.');
+
+  return candidates.find(dir => {
+    const uploadsDir = path.join(dir, 'uploads');
+    return fs.existsSync(uploadsDir) && fs.statSync(uploadsDir).isDirectory();
+  }) || candidates[0];
+}
+
+function validateBackupDatabase(dbPath) {
+  const restoreDb = new SQL.Database(fs.readFileSync(dbPath));
+  const requiredTables = ['tours', 'tour_images', 'tour_includes', 'tour_excludes', 'slides', 'gallery', 'settings'];
+
+  try {
+    const integrityRow = queryRows(restoreDb, 'PRAGMA integrity_check')[0] || {};
+    const integrity = Object.values(integrityRow)[0];
+    if (integrity !== 'ok') throw userError(`Database backup rusak: ${integrity}`);
+
+    const tableRows = queryRows(restoreDb, "SELECT name FROM sqlite_master WHERE type='table'");
+    const tableSet = new Set(tableRows.map(row => row.name));
+    const missing = requiredTables.filter(table => !tableSet.has(table));
+    if (missing.length) throw userError(`Database backup tidak lengkap: ${missing.join(', ')}`);
+
+    const rows = {};
+    for (const table of requiredTables) {
+      rows[table] = queryRows(restoreDb, `SELECT COUNT(*) AS count FROM ${table}`)[0].count;
+    }
+    return rows;
+  } finally {
+    restoreDb.close();
+  }
+}
+
+function createPreRestoreBackup() {
+  fs.mkdirSync(BACKUPS_DIR, { recursive: true });
+  const backupDir = path.join(BACKUPS_DIR, `pre-restore-${timestamp()}`);
+  fs.mkdirSync(backupDir, { recursive: true });
+
+  const manifest = {
+    createdAt: new Date().toISOString(),
+    reason: 'Automatic backup before admin restore',
+  };
+
+  if (fs.existsSync(DB_PATH)) {
+    fs.copyFileSync(DB_PATH, path.join(backupDir, 'harmoni.db'));
+    manifest.databaseBytes = fs.statSync(DB_PATH).size;
+  }
+  manifest.uploads = copyDirectory(UPLOADS_DIR, path.join(backupDir, 'uploads'));
+  fs.writeFileSync(path.join(backupDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+  return backupDir;
+}
+
+function replaceUploadsFrom(sourceUploadsDir) {
+  assertProjectChild(UPLOADS_DIR, 'uploads');
+  fs.rmSync(UPLOADS_DIR, { recursive: true, force: true });
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  return copyDirectory(sourceUploadsDir, UPLOADS_DIR);
+}
+
+function reloadDatabaseFromDisk() {
+  const previous = db;
+  db = loadDb(SQL);
+  try {
+    if (previous && typeof previous.close === 'function') previous.close();
+  } catch (_) {}
+}
+
+function restoreBackupPackage(restoreRoot) {
+  const restoreDbPath = path.join(restoreRoot, 'harmoni.db');
+  const restoreUploadsDir = path.join(restoreRoot, 'uploads');
+  const preparedUploadsDir = path.join(RESTORE_TMP_DIR, 'prepared-uploads-' + timestamp() + '-' + Math.round(Math.random() * 1e6));
+
+  if (!fs.existsSync(restoreUploadsDir) || !fs.statSync(restoreUploadsDir).isDirectory()) {
+    throw userError('Backup tidak berisi folder uploads.');
+  }
+
+  const rows = validateBackupDatabase(restoreDbPath);
+  let preRestoreBackup = '';
+
+  try {
+    copyDirectory(restoreUploadsDir, preparedUploadsDir);
+    preRestoreBackup = createPreRestoreBackup();
+    fs.copyFileSync(restoreDbPath, DB_PATH);
+    const uploads = replaceUploadsFrom(preparedUploadsDir);
+    reloadDatabaseFromDisk();
+    return { preRestoreBackup, rows, uploads };
+  } catch (error) {
+    if (preRestoreBackup) {
+      try {
+        const previousDbPath = path.join(preRestoreBackup, 'harmoni.db');
+        const previousUploadsDir = path.join(preRestoreBackup, 'uploads');
+        if (fs.existsSync(previousDbPath)) fs.copyFileSync(previousDbPath, DB_PATH);
+        if (fs.existsSync(previousUploadsDir)) replaceUploadsFrom(previousUploadsDir);
+        reloadDatabaseFromDisk();
+      } catch (rollbackError) {
+        error.message += ` Rollback gagal: ${rollbackError.message}`;
+      }
+    }
+    throw error;
+  } finally {
+    cleanupPath(preparedUploadsDir);
+  }
+}
+
+function cleanupPath(targetPath) {
+  if (!targetPath) return;
+  try {
+    fs.rmSync(targetPath, { recursive: true, force: true });
+  } catch (_) {}
+}
+
 // ---------- Init ----------
 async function init() {
-  const SQL = await initSqlJs();
+  SQL = await initSqlJs();
   db = loadDb(SQL);
 
   // Create tables
@@ -300,7 +642,7 @@ app.get('/api/tours/:id', (req, res) => {
   res.json(enrichTour(t));
 });
 
-app.post('/api/tours', upload.array('images', 10), async (req, res) => {
+app.post('/api/tours', requireAdmin, upload.array('images', 10), async (req, res) => {
   const { name, location, duration, price, category, description, difficulty, distance, meeting_point, itinerary, preparations } = req.body;
   let includes = []; try { includes = JSON.parse(req.body.includes || '[]'); } catch(e){}
   let excludes = []; try { excludes = JSON.parse(req.body.excludes || '[]'); } catch(e){}
@@ -323,7 +665,7 @@ app.post('/api/tours', upload.array('images', 10), async (req, res) => {
   res.json({ success: true, id });
 });
 
-app.put('/api/tours/:id', upload.array('images', 10), async (req, res) => {
+app.put('/api/tours/:id', requireAdmin, upload.array('images', 10), async (req, res) => {
   const tourId = parseInt(req.params.id);
   const existing = dbGet('SELECT * FROM tours WHERE id=?', [tourId]);
   if (!existing) return res.status(404).json({ error: 'Not found' });
@@ -379,7 +721,7 @@ app.put('/api/tours/:id', upload.array('images', 10), async (req, res) => {
   res.json({ success: true });
 });
 
-app.delete('/api/tours/:id', (req, res) => {
+app.delete('/api/tours/:id', requireAdmin, (req, res) => {
   const tourId = parseInt(req.params.id);
   const images = dbAll('SELECT filename FROM tour_images WHERE tour_id=?', [tourId]);
   for (const img of images) {
@@ -397,7 +739,7 @@ app.get('/api/slides', (req, res) => {
   res.json(slides.map(s => ({ ...s, image: s.filename ? '/uploads/' + s.filename : '' })));
 });
 
-app.post('/api/slides', upload.single('image'), async (req, res) => {
+app.post('/api/slides', requireAdmin, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Pilih gambar untuk slide.' });
 
   let filename = '';
@@ -410,7 +752,7 @@ app.post('/api/slides', upload.single('image'), async (req, res) => {
   res.json({ success: true, id });
 });
 
-app.put('/api/slides/:id', upload.single('image'), async (req, res) => {
+app.put('/api/slides/:id', requireAdmin, upload.single('image'), async (req, res) => {
   const id = parseInt(req.params.id);
   const existing = dbGet('SELECT * FROM slides WHERE id=?', [id]);
   if (!existing) return res.status(404).json({ error: 'Not found' });
@@ -429,7 +771,7 @@ app.put('/api/slides/:id', upload.single('image'), async (req, res) => {
   res.json({ success: true });
 });
 
-app.delete('/api/slides/:id', (req, res) => {
+app.delete('/api/slides/:id', requireAdmin, (req, res) => {
   const id = parseInt(req.params.id);
   const existing = dbGet('SELECT * FROM slides WHERE id=?', [id]);
   if (existing && existing.filename) {
@@ -447,7 +789,7 @@ app.get('/api/gallery', (req, res) => {
   res.json(items.map(g => ({ ...g, image: g.filename ? '/uploads/' + g.filename : '' })));
 });
 
-app.post('/api/gallery', upload.single('image'), async (req, res) => {
+app.post('/api/gallery', requireAdmin, upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'Pilih gambar untuk galeri.' });
 
   let filename = '';
@@ -460,7 +802,7 @@ app.post('/api/gallery', upload.single('image'), async (req, res) => {
   res.json({ success: true, id });
 });
 
-app.delete('/api/gallery/:id', (req, res) => {
+app.delete('/api/gallery/:id', requireAdmin, (req, res) => {
   const id = parseInt(req.params.id);
   const existing = dbGet('SELECT * FROM gallery WHERE id=?', [id]);
   if (existing && existing.filename) {
@@ -476,27 +818,62 @@ app.delete('/api/gallery/:id', (req, res) => {
 app.get('/api/settings', (req, res) => {
   const rows = dbAll('SELECT * FROM settings');
   const settings = {};
-  for (const r of rows) settings[r.key] = r.value;
+  for (const r of rows) {
+    if (r.key !== 'admin_password') settings[r.key] = r.value;
+  }
   res.json(settings);
 });
 
-app.put('/api/settings', (req, res) => {
+app.put('/api/settings', requireAdmin, (req, res) => {
+  const passwordChanged = Object.prototype.hasOwnProperty.call(req.body, 'admin_password');
   for (const [key, value] of Object.entries(req.body)) {
     db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?,?)', [key, String(value)]);
   }
   saveDb();
+  if (passwordChanged) {
+    adminSessions.clear();
+    return res.json({ success: true, token: createAdminToken() });
+  }
   res.json({ success: true });
 });
 
 // --- AUTH ---
 app.post('/api/login', (req, res) => {
   const { password } = req.body;
-  const row = dbGet('SELECT value FROM settings WHERE key=?', ['admin_password']);
-  const correctPass = row ? row.value : 'admin123';
-  if (password === correctPass) {
-    res.json({ success: true });
+  if (password === getAdminPassword()) {
+    res.json({ success: true, token: createAdminToken() });
   } else {
     res.status(401).json({ error: 'Password salah' });
+  }
+});
+
+app.get('/api/admin/session', requireAdmin, (req, res) => {
+  res.json({ success: true });
+});
+
+// --- BACKUP RESTORE ---
+app.post('/api/backups/restore', requireAdmin, requireAdminPassword, restoreUpload.single('backup'), (req, res) => {
+  const uploadedPath = req.file?.path;
+  const extractDir = path.join(RESTORE_TMP_DIR, 'extract-' + timestamp() + '-' + Math.round(Math.random() * 1e6));
+
+  try {
+    if (!req.file) throw userError('Pilih file backup terlebih dahulu.');
+    fs.mkdirSync(extractDir, { recursive: true });
+    extractTarGz(uploadedPath, extractDir);
+    const restoreRoot = findRestoreRoot(extractDir);
+    const result = restoreBackupPackage(restoreRoot);
+
+    res.json({
+      success: true,
+      message: 'Backup berhasil direstore.',
+      ...result,
+    });
+  } catch (error) {
+    const status = error.statusCode || 500;
+    res.status(status).json({ error: error.message || 'Restore backup gagal.' });
+  } finally {
+    cleanupPath(uploadedPath);
+    cleanupPath(extractDir);
   }
 });
 
@@ -504,7 +881,9 @@ app.post('/api/login', (req, res) => {
 app.use((err, req, res, next) => {
   if (!err) return next();
   if (req.path.startsWith('/api/')) {
-    const isUploadError = err instanceof multer.MulterError || err.message?.startsWith('Format file tidak didukung');
+    const isUploadError = err instanceof multer.MulterError
+      || err.message?.startsWith('Format file tidak didukung')
+      || err.message?.startsWith('File backup harus');
     const status = isUploadError ? 400 : 500;
     return res.status(status).json({ error: err.message || 'Upload gagal' });
   }
