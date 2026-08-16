@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "backup:data": "node scripts/backup-data.js",
     "import:albums": "node scripts/import-albums.js"
   },
   "dependencies": {
