@@ -206,27 +206,6 @@ img { max-width: 100%; display: block; }
 }
 .dashboard-hero-preview-meta strong { font-family: var(--font-display); font-size: 1.35rem; }
 
-.backup-status {
-    font-size: .78rem;
-    color: var(--text-dim);
-    font-weight: 600;
-}
-.backup-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-.backup-warning {
-    font-size: .78rem;
-    color: var(--red);
-    font-weight: 600;
-}
-.backup-form .btn-danger:disabled {
-    opacity: .72;
-    cursor: wait;
-}
-
 /* Tables */
 .table-wrap {
     width: 100%;

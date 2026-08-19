@@ -12,6 +12,7 @@ const DEFAULT_HERO_BACKGROUND = '/uploads/slide-album-curug-leuwi-hejo.webp';
 let tours = [];
 let slides = [];
 let gallery = [];
+let partners = [];
 let settings = {};
 let authToken = localStorage.getItem('hts_admin_token') || '';
 let isLoggedIn = localStorage.getItem('hts_admin_loggedin') === 'true';
@@ -67,8 +68,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     const pass = document.getElementById('loginPassword').value;
     try {
         const result = await api('/api/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pass }) });
-        authToken = result.token;
-        if (!authToken) throw new Error('Token login tidak diterima dari server.');
+        authToken = result.token || 'logged-in';
         isLoggedIn = true;
         localStorage.setItem('hts_admin_token', authToken);
         localStorage.setItem('hts_admin_loggedin', 'true');
@@ -93,10 +93,11 @@ document.getElementById('btnLogout').addEventListener('click', () => {
 // DATA LOADING
 // =============================================
 async function loadAll() {
-    [tours, slides, gallery] = await Promise.all([
+    [tours, slides, gallery, partners] = await Promise.all([
         api('/api/tours').catch(() => []),
         api('/api/slides').catch(() => []),
         api('/api/gallery').catch(() => []),
+        api('/api/partners').catch(() => []),
     ]);
     try { settings = await api('/api/settings'); } catch(e) { settings = {}; }
 }
@@ -107,6 +108,7 @@ async function refreshAll() {
     renderToursTable();
     renderSliderTable();
     renderGalleryTable();
+    renderPartnersTable();
 }
 
 // =============================================
@@ -129,6 +131,7 @@ const pages = {
     tours:     document.getElementById('pageTours'),
     slider:    document.getElementById('pageSlider'),
     gallery:   document.getElementById('pageGallery'),
+    partners:  document.getElementById('pagePartners'),
     settings:  document.getElementById('pageSettings'),
 };
 
@@ -145,6 +148,7 @@ document.querySelectorAll('.sidebar-link[data-page]').forEach(link => {
         if (page === 'tours') renderToursTable();
         if (page === 'slider') renderSliderTable();
         if (page === 'gallery') renderGalleryTable();
+        if (page === 'partners') renderPartnersTable();
         if (page === 'settings') loadSettings();
         document.querySelector('.admin-sidebar').classList.remove('open');
     });
@@ -186,55 +190,6 @@ function renderDashboardHeroBackground() {
     document.getElementById('dashboardHeroCount').textContent = slides.length ? `${slides.length} slide aktif` : 'Default bawaan';
     document.getElementById('dashboardHeroTitle').textContent = activeSlide?.title || (activeSlide ? 'Slide tanpa judul' : 'Belum ada slide admin');
 }
-
-// =============================================
-// BACKUP RESTORE
-// =============================================
-const restoreBackupForm = document.getElementById('restoreBackupForm');
-restoreBackupForm?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const fileInput = document.getElementById('backupFileInput');
-    const passwordInput = document.getElementById('backupAdminPassword');
-    const button = document.getElementById('btnRestoreBackup');
-    const status = document.getElementById('backupStatus');
-    const file = fileInput.files[0];
-    const password = passwordInput.value;
-
-    if (!file) {
-        toast('Pilih file backup terlebih dahulu.', true);
-        return;
-    }
-
-    if (!confirm('Restore backup akan mengganti database dan semua foto upload saat ini. Lanjutkan?')) return;
-
-    const formData = new FormData();
-    formData.append('backup', file);
-
-    button.disabled = true;
-    button.innerHTML = '<i class="ri-loader-4-line"></i> Memproses...';
-    status.textContent = 'Mengupload dan merestore backup...';
-
-    try {
-        const result = await api('/api/backups/restore', {
-            method: 'POST',
-            headers: { 'X-Admin-Password': password },
-            body: formData,
-        });
-
-        await refreshAll();
-        fileInput.value = '';
-        passwordInput.value = '';
-        status.textContent = `Restore berhasil: ${result.rows?.tours || 0} destinasi, ${result.uploads?.files || 0} file upload`;
-        toast('Backup berhasil direstore.');
-    } catch (err) {
-        status.textContent = 'Restore gagal.';
-        toast('Gagal restore: ' + err.message, true);
-    } finally {
-        button.disabled = false;
-        button.innerHTML = '<i class="ri-upload-cloud-2-line"></i> Upload & Restore';
-    }
-});
 
 // =============================================
 // TOURS TABLE
@@ -548,6 +503,87 @@ async function deleteGallery(id) {
     await api('/api/gallery/' + id, { method: 'DELETE' });
     await refreshAll();
     toast('Gambar dihapus.');
+}
+
+// =============================================
+// PARTNERS
+// =============================================
+document.getElementById('btnAddPartner').addEventListener('click', () => openPartnerModal());
+
+function renderPartnersTable() {
+    document.getElementById('partnersTableBody').innerHTML = partners.map(p => `
+        <tr>
+            <td>${p.image ? `<img src="${p.image}" class="table-img" alt="">` : '<span style="color:var(--text-dim);">-</span>'}</td>
+            <td><strong>${p.name || '<em style="color:var(--text-dim);">Tanpa nama</em>'}</strong></td>
+            <td>${p.url ? `<a href="${p.url}" target="_blank" rel="noopener" style="color:#0ea5e9;">${p.url}</a>` : '<em style="color:var(--text-dim);">-</em>'}</td>
+            <td>
+                <button class="btn-icon edit" onclick="openPartnerModal(partners.find(p => p.id === ${p.id}))"><i class="ri-edit-line"></i></button>
+                <button class="btn-icon delete" onclick="deletePartner(${p.id})"><i class="ri-delete-bin-line"></i></button>
+            </td>
+        </tr>
+    `).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--text-dim);padding:24px;">Belum ada partner.</td></tr>';
+}
+
+async function deletePartner(id) {
+    if (!confirm('Hapus partner ini?')) return;
+    await api('/api/partners/' + id, { method: 'DELETE' });
+    await refreshAll();
+    toast('Partner dihapus.');
+}
+
+function openPartnerModal(existing = null) {
+    const overlay = document.getElementById('simpleModalOverlay');
+    const title   = document.getElementById('simpleModalTitle');
+    const body    = document.getElementById('simpleModalBody');
+
+    title.textContent = existing ? 'Edit Partner' : 'Tambah Partner';
+    body.innerHTML = `
+        <form id="simpleForm" class="form" enctype="multipart/form-data">
+            <input type="hidden" id="simpleId" value="${existing ? existing.id : ''}">
+            <div class="form-group">
+                <label>Upload Logo ${existing ? '(biarkan kosong jika tidak diganti)' : '*'}</label>
+                <input type="file" id="simpleFile" accept=".jpg,.jpeg,.png,.webp,.gif,.bmp,.avif" ${existing ? '' : 'required'}>
+                ${existing && existing.image ? `<img src="${existing.image}" style="width:100%;max-height:110px;object-fit:contain;border-radius:8px;margin-top:8px;background:var(--cream);padding:8px;">` : ''}
+                <small>Logo PNG dengan latar transparan paling bagus.</small>
+            </div>
+            <div class="form-group">
+                <label>Nama Partner</label>
+                <input type="text" id="simpleName" value="${existing ? (existing.name || '') : ''}" placeholder="Contoh: Sentul Adventure" required>
+            </div>
+            <div class="form-group">
+                <label>Link Website / Sosmed (opsional)</label>
+                <input type="text" id="simpleUrl" value="${existing ? (existing.url || '') : ''}" placeholder="https://...">
+            </div>
+            <button type="submit" class="btn btn-primary btn-full">Simpan</button>
+        </form>
+    `;
+
+    body.querySelector('#simpleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        try {
+            const editId = body.querySelector('#simpleId').value;
+            const fileInput = body.querySelector('#simpleFile');
+            const formData = new FormData();
+            if (fileInput.files[0]) formData.append('logo', fileInput.files[0]);
+            formData.append('name', body.querySelector('#simpleName').value.trim());
+            formData.append('url', body.querySelector('#simpleUrl').value.trim());
+
+            if (!editId && !fileInput.files[0]) {
+                toast('Pilih file logo dulu.', true);
+                return;
+            }
+
+            const url = editId ? `/api/partners/${editId}` : '/api/partners';
+            await api(url, { method: editId ? 'PUT' : 'POST', body: formData });
+            overlay.classList.remove('open');
+            await refreshAll();
+            toast(editId ? 'Partner diperbarui!' : 'Partner ditambahkan!');
+        } catch (err) {
+            toast('Gagal: ' + err.message, true);
+        }
+    });
+
+    overlay.classList.add('open');
 }
 
 // =============================================

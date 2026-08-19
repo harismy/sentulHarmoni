@@ -22,6 +22,7 @@ pnpm-debug.log*
 
 # Manual data backups
 backups/
+harmoni-backup-*.tar.gz
 
 # Local source albums (imported into uploads with npm run import:albums)
 MyAlbums/

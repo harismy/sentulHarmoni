@@ -35,6 +35,7 @@ const FALLBACK_GALLERY = [
 let slides = [];
 let tours = [];
 let gallery = [];
+let partners = [];
 let settings = {};
 let filteredTours = [];
 let visibleTours = 6;
@@ -81,21 +82,24 @@ async function fetchJson(url) {
 
 async function loadData() {
     try {
-        const [tourData, slideData, galleryData, settingData] = await Promise.all([
+        const [tourData, slideData, galleryData, partnerData, settingData] = await Promise.all([
             fetchJson('/api/tours'),
             fetchJson('/api/slides'),
             fetchJson('/api/gallery'),
+            fetchJson('/api/partners'),
             fetchJson('/api/settings')
         ]);
         tours = tourData.map(enrichTour);
         slides = slideData.map(slide => ({ ...slide, image: slide.filename ? resolveUploadedImage(slide.filename) : slide.image })).filter(slide => slide.image);
         gallery = galleryData.map(item => ({ ...item, image: item.filename ? resolveUploadedImage(item.filename) : item.image })).filter(item => item.image);
+        partners = partnerData.map(p => ({ ...p, image: p.filename ? resolveUploadedImage(p.filename) : '' })).filter(p => p.image);
         settings = settingData || {};
         if (!slides.length) slides = FALLBACK_SLIDES;
     } catch (error) {
         tours = FALLBACK_TOURS.map(enrichTour);
         slides = FALLBACK_SLIDES;
         gallery = FALLBACK_GALLERY;
+        partners = [];
         settings = {};
     }
 
@@ -111,6 +115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initFilters();
     renderTours();
     renderGallery();
+    renderPartners();
     initFaq();
     applySettings();
     initContactForm();
@@ -287,6 +292,19 @@ function renderGallery() {
         const item = event.target.closest('.gallery-item');
         if (item) openLightbox(gallery[Number(item.dataset.galleryIndex)]);
     });
+}
+
+function renderPartners() {
+    const section = document.getElementById('partnersSection');
+    const row = document.getElementById('partnersRow');
+    if (!section || !row) return;
+    section.hidden = partners.length === 0;
+    row.innerHTML = partners.map(p => {
+        const logo = `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name || 'Partner')}" loading="lazy">`;
+        return p.url
+            ? `<a class="partner-logo" href="${escapeHtml(p.url)}" target="_blank" rel="noopener" aria-label="${escapeHtml(p.name || 'Partner')}">${logo}</a>`
+            : `<span class="partner-logo">${logo}</span>`;
+    }).join('');
 }
 
 function initFaq() {

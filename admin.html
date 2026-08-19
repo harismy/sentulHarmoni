@@ -59,6 +59,9 @@
                 <a href="#" class="sidebar-link" data-page="gallery">
                     <i class="ri-gallery-line"></i> Galeri
                 </a>
+                <a href="#" class="sidebar-link" data-page="partners">
+                    <i class="ri-handshake-line"></i> Partner
+                </a>
                 <a href="#" class="sidebar-link" data-page="settings">
                     <i class="ri-settings-3-line"></i> Pengaturan
                 </a>
@@ -122,35 +125,6 @@
                                 <span class="stat-num" id="statLocations">0</span>
                                 <span class="stat-label">Lokasi</span>
                             </div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header card-header-actions">
-                            <h3>Backup & Restore</h3>
-                            <span class="backup-status" id="backupStatus">Siap menerima file backup</span>
-                        </div>
-                        <div class="card-body">
-                            <form id="restoreBackupForm" class="form backup-form">
-                                <div class="form-row">
-                                    <div class="form-group flex-2">
-                                        <label>File Backup</label>
-                                        <input type="file" id="backupFileInput" accept=".tar.gz,.tgz,application/gzip" required>
-                                        <small>Gunakan file .tar.gz dari hasil backup data.</small>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Password Admin</label>
-                                        <input type="password" id="backupAdminPassword" placeholder="Password admin" required autocomplete="off">
-                                        <small>Wajib diisi ulang sebelum restore.</small>
-                                    </div>
-                                </div>
-                                <div class="backup-actions">
-                                    <button type="submit" class="btn btn-danger" id="btnRestoreBackup">
-                                        <i class="ri-upload-cloud-2-line"></i> Upload & Restore
-                                    </button>
-                                    <span class="backup-warning">Restore akan mengganti database dan semua foto upload saat ini.</span>
-                                </div>
-                            </form>
                         </div>
                     </div>
 
@@ -238,6 +212,24 @@
                             <table class="table">
                                 <thead><tr><th>Gambar</th><th>Caption</th><th>Aksi</th></tr></thead>
                                 <tbody id="galleryTableBody"></tbody>
+                            </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== PAGE: PARTNERS ===== -->
+                <div class="page" id="pagePartners">
+                    <div class="page-actions">
+                        <button class="btn btn-primary" id="btnAddPartner"><i class="ri-add-line"></i> Tambah Partner</button>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3>Daftar Partner</h3></div>
+                        <div class="card-body">
+                            <div class="table-wrap">
+                            <table class="table">
+                                <thead><tr><th>Logo</th><th>Nama</th><th>Link</th><th>Aksi</th></tr></thead>
+                                <tbody id="partnersTableBody"></tbody>
                             </table>
                             </div>
                         </div>
