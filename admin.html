@@ -130,6 +130,35 @@
 
                     <div class="card">
                         <div class="card-header card-header-actions">
+                            <h3>Backup & Restore</h3>
+                            <span class="backup-status" id="backupStatus">Siap menerima file backup</span>
+                        </div>
+                        <div class="card-body">
+                            <form id="restoreBackupForm" class="form backup-form">
+                                <div class="form-row">
+                                    <div class="form-group flex-2">
+                                        <label>File Backup</label>
+                                        <input type="file" id="backupFileInput" accept=".tar.gz,.tgz,application/gzip" required>
+                                        <small>Gunakan file .tar.gz dari hasil backup data.</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Password Admin</label>
+                                        <input type="password" id="backupAdminPassword" placeholder="Password admin" required autocomplete="off">
+                                        <small>Wajib diisi ulang sebelum restore.</small>
+                                    </div>
+                                </div>
+                                <div class="backup-actions">
+                                    <button type="submit" class="btn btn-danger" id="btnRestoreBackup">
+                                        <i class="ri-upload-cloud-2-line"></i> Upload & Restore
+                                    </button>
+                                    <span class="backup-warning">Restore akan mengganti database dan semua foto upload saat ini.</span>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header card-header-actions">
                             <h3>Background Beranda</h3>
                             <div class="header-actions">
                                 <button class="btn btn-sm btn-outline" id="btnDashboardManageSlider"><i class="ri-slideshow-line"></i> Kelola Slider</button>
